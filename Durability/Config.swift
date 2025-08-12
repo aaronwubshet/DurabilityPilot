@@ -17,6 +17,11 @@ enum Config {
     // Assessment Configuration
     static let maxAssessmentVideoDuration: TimeInterval = 180 // 3 minutes
     static let maxImageUploadSize: Int64 = 10 * 1024 * 1024 // 10MB
+    static let maxVideoUploadSize: Int64 = 10 * 1024 * 1024 // 10MB
+    
+    // Storage Configuration
+    static let assessmentVideosBucket = "assessment-videos"
+    static let trainingPlanImagesBucket = "training-plan-images"
     
     // Plan Configuration
     static let defaultPlanDuration = 42 // 6 weeks

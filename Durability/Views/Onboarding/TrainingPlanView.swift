@@ -22,6 +22,9 @@ struct TrainingPlanView: View {
                         TextField("Describe your training plan", text: $viewModel.trainingPlanInfo, axis: .vertical)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .lineLimit(5...10)
+                            .onChange(of: viewModel.trainingPlanInfo) { _, _ in
+                                // Data will be saved when user presses Next
+                            }
                         
                         if let image = viewModel.trainingPlanImage {
                             Image(uiImage: image)
@@ -45,6 +48,15 @@ struct TrainingPlanView: View {
         }
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(isPresented: $showImagePicker, image: $viewModel.trainingPlanImage)
+        }
+        .onChange(of: viewModel.trainingPlanImage) { _, newImage in
+            // Data will be saved when user presses Next
+        }
+        .onAppear {
+            // Load existing user selections from database
+            Task {
+                await viewModel.loadExistingSelectionsForCurrentStep()
+            }
         }
     }
 }

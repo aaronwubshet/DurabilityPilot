@@ -3,11 +3,10 @@ import AuthenticationServices
 import CryptoKit
 
 struct AuthenticationView: View {
-    
     let authService: AuthService
     @StateObject private var viewModel: AuthenticationViewModel
-    @State private var currentNonce: String?
     @EnvironmentObject var appState: AppState
+    @State private var currentNonce: String? = nil
     
     init(authService: AuthService) {
         self.authService = authService
@@ -16,11 +15,10 @@ struct AuthenticationView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                
+            VStack(spacing: 30) {
                 Spacer()
                 
-                // Your App Logo Here
+                // App Logo
                 Image(systemName: "shield.lefthalf.filled")
                     .font(.system(size: 80))
                     .foregroundColor(.accentColor)
@@ -29,13 +27,13 @@ struct AuthenticationView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
-                Text("Sign in with Apple to continue.")
+                Text("Sign in with Apple to continue")
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
                 Spacer()
                 
-                // Sign In with Apple Button
+                // Sign in with Apple Button
                 SignInWithAppleButton { request in
                     // Configure the request
                     request.requestedScopes = [.fullName, .email]
@@ -48,8 +46,8 @@ struct AuthenticationView: View {
                     handleSignInWithAppleResult(result)
                 }
                 .signInWithAppleButtonStyle(.black)
-                .frame(height: 55)
-                .cornerRadius(10)
+                .frame(height: 50)
+                .cornerRadius(8)
                 
                 if viewModel.isLoading {
                     ProgressView("Signing in...")
@@ -63,35 +61,14 @@ struct AuthenticationView: View {
                         .multilineTextAlignment(.center)
                         .padding()
                 }
+                
+                Spacer()
             }
             .padding()
         }
     }
     
-    private func handleSignInWithAppleResult(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let authorization):
-            if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
-                guard let nonce = currentNonce else {
-                    viewModel.errorMessage = "Invalid state: A login callback was received, but no login request was sent."
-                    return
-                }
-                
-                Task {
-                    let success = await viewModel.signInWithApple(credential: appleIDCredential, nonce: nonce)
-                    if success {
-                        // Successfully signed in - update app state
-                        await appState.updateAuthenticationStatus()
-                        print("Successfully signed in with Apple")
-                    }
-                }
-            }
-        case .failure(let error):
-            viewModel.errorMessage = "Sign in with Apple failed: \(error.localizedDescription)"
-        }
-    }
-    
-    // MARK: - Security Helpers
+    // MARK: - Apple Sign-In Helper Methods
     
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
@@ -133,6 +110,52 @@ struct AuthenticationView: View {
         }.joined()
         
         return hashString
+    }
+    
+    private func handleSignInWithAppleResult(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                guard let nonce = currentNonce else {
+                    print("Invalid state: A login callback was received, but no login request was sent.")
+                    return
+                }
+                guard let appleIDToken = appleIDCredential.identityToken else {
+                    print("Unable to fetch identity token")
+                    return
+                }
+                guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                    print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
+                    return
+                }
+                
+                Task {
+                    do {
+                        // Convert PersonNameComponents to String
+                        let fullNameString: String?
+                        if let fullName = appleIDCredential.fullName {
+                            let formatter = PersonNameComponentsFormatter()
+                            fullNameString = formatter.string(from: fullName)
+                        } else {
+                            fullNameString = nil
+                        }
+                        
+                        try await authService.signInWithApple(
+                            idToken: idTokenString,
+                            nonce: nonce,
+                            fullName: fullNameString,
+                            email: appleIDCredential.email
+                        )
+                        
+                        await appState.updateAuthenticationStatus()
+                    } catch {
+                        print("Sign in with Apple failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        case .failure(let error):
+            print("Sign in with Apple failed: \(error.localizedDescription)")
+        }
     }
 }
 

@@ -4,7 +4,7 @@ import Foundation
 struct Assessment: Codable, Identifiable {
     let id: String
     let profileId: String
-    let videoURL: String?
+    var videoURL: String? // Changed from 'let' to 'var' to allow modification
     let createdAt: Date
 }
 

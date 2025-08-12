@@ -57,12 +57,5 @@ class AuthenticationViewModel: ObservableObject {
         isLoading = false
         return success
     }
-    
-    func signInWithApple(credential: ASAuthorizationAppleIDCredential, nonce: String) async -> Bool {
-        isLoading = true
-        let success = await authService.signInWithApple(credential: credential, nonce: nonce)
-        isLoading = false
-        return success
-    }
 }
 

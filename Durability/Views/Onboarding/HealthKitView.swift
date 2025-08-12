@@ -57,6 +57,8 @@ struct HealthKitView: View {
             }
             .disabled(appState.healthKitService.isAuthorized)
             
+
+            
             if appState.healthKitService.isAuthorized {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
@@ -71,6 +73,8 @@ struct HealthKitView: View {
         }
         .padding()
     }
+    
+
     
     private func requestHealthKitPermission() async {
         let granted = await appState.healthKitService.requestAuthorization()
@@ -117,8 +121,8 @@ struct HealthKitView: View {
                 let lbs = Int((kg * 2.20462).rounded())
                 viewModel.weight = String(lbs)
             }
-            if let age = profile.age, let dob = Calendar.current.date(byAdding: .year, value: -age, to: Date()) {
-                viewModel.dateOfBirth = dob
+            if let profileDob = profile.dateOfBirth {
+                viewModel.dateOfBirth = profileDob
             }
             if let sex = profile.sex { viewModel.sex = sex }
         }

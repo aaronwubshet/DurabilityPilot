@@ -5,7 +5,7 @@ struct UserProfile: Codable, Identifiable {
     let id: String
     var firstName: String
     var lastName: String
-    var email: String
+    var dateOfBirth: Date?
     var age: Int?
     var sex: Sex?
     var heightCm: Double?
@@ -17,6 +17,24 @@ struct UserProfile: Codable, Identifiable {
     var trainingPlanImageURL: String?
     var createdAt: Date
     var updatedAt: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case dateOfBirth = "date_of_birth"
+        case age
+        case sex
+        case heightCm = "height_cm"
+        case weightKg = "weight_kg"
+        case isPilot = "is_pilot"
+        case onboardingCompleted = "onboarding_completed"
+        case assessmentCompleted = "assessment_completed"
+        case trainingPlanInfo = "training_plan_info"
+        case trainingPlanImageURL = "training_plan_image_url"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
     
     enum Sex: String, CaseIterable, Codable {
         case male = "male"

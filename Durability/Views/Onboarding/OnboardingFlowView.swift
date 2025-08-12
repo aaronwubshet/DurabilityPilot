@@ -49,18 +49,22 @@ struct OnboardingFlowView: View {
                     Button(viewModel.currentStep == OnboardingStep.allCases.last ? "Complete" : "Next") {
                         if viewModel.currentStep == OnboardingStep.allCases.last {
                             Task {
-                                await viewModel.completeOnboarding(appState: appState)
+                                await viewModel.completeOnboarding()
                             }
                         } else {
                             viewModel.nextStep()
                         }
                     }
                     .disabled(!viewModel.canProceed)
+
                 }
                 .padding()
             }
             .navigationTitle("Setup Your Profile")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                viewModel.setAppState(appState)
+            }
         }
     }
 }

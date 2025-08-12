@@ -48,7 +48,7 @@ class HealthKitService: ObservableObject {
                     id: userId,
                     firstName: "",
                     lastName: "",
-                    email: appState.authService.user?.email ?? "",
+                    dateOfBirth: nil,
                     age: nil,
                     sex: nil,
                     heightCm: nil,
@@ -67,6 +67,7 @@ class HealthKitService: ObservableObject {
             if let heightM = self.healthData?.height { profile.heightCm = heightM * 100.0 }
             if let weightKg = self.healthData?.weight { profile.weightKg = weightKg }
             if let dob = getDateOfBirth() {
+                profile.dateOfBirth = dob
                 let comps = Calendar.current.dateComponents([.year], from: dob, to: Date())
                 profile.age = comps.year
             }

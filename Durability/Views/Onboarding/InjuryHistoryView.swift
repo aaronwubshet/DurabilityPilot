@@ -42,6 +42,9 @@ struct InjuryHistoryView: View {
                          TextField("Describe other injuries", text: $viewModel.otherInjuryText, axis: .vertical)
                              .textFieldStyle(RoundedBorderTextFieldStyle())
                              .lineLimit(3...6)
+                             .onChange(of: viewModel.otherInjuryText) { _, _ in
+                                 // Data will be saved when user presses Next
+                             }
                      }
                      
                      Text("Note: Always follow medical advice from licensed professionals")
@@ -54,9 +57,13 @@ struct InjuryHistoryView: View {
              }
              .padding()
          }
-         .onAppear {
-             loadInjuries()
-         }
+                 .onAppear {
+            loadInjuries()
+            // Load existing user selections from database
+            Task {
+                await viewModel.loadExistingSelectionsForCurrentStep()
+            }
+        }
      }
      
      private func loadInjuries() {

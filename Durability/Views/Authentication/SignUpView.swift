@@ -72,6 +72,7 @@ struct SignUpView: View {
         .padding()
         .navigationTitle("Create Account")
         .navigationBarTitleDisplayMode(.inline)
+        .dismissKeyboardOnSwipe()
     }
 }
 

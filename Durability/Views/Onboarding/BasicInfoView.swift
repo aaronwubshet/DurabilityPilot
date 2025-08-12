@@ -36,6 +36,8 @@ struct BasicInfoView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
+
+                
                 // Name fields
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Name")
@@ -44,9 +46,15 @@ struct BasicInfoView: View {
                     HStack {
                         TextField("First Name", text: $viewModel.firstName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .onChange(of: viewModel.firstName) { _, _ in
+                                // Data will be saved when user presses Next
+                            }
                         
                         TextField("Last Name", text: $viewModel.lastName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .onChange(of: viewModel.lastName) { _, _ in
+                                // Data will be saved when user presses Next
+                            }
                     }
                 }
                 
@@ -108,9 +116,13 @@ struct BasicInfoView: View {
                         .font(.headline)
                     
                     Menu {
-                        Button("—", action: { viewModel.sex = nil })
+                        Button("—", action: { 
+                            viewModel.sex = nil
+                        })
                         ForEach(UserProfile.Sex.allCases, id: \.self) { sex in
-                            Button(action: { viewModel.sex = sex }) {
+                            Button(action: { 
+                                viewModel.sex = sex
+                            }) {
                                 HStack {
                                     Text(sex.displayName)
                                     if viewModel.sex == sex {
@@ -193,9 +205,20 @@ struct BasicInfoView: View {
             .padding()
         }
         .onAppear {
-            initializeDOBSelectors()
-            initializePhysicalSelectors()
+            Task {
+                // Ensure Apple Sign-In data is populated when view appears
+                viewModel.populateNameFromAppleSignInIfNeeded()
+                // Ensure HealthKit data is populated when view appears
+                await viewModel.populateHealthKitDataIfAvailable()
+                
+                // Initialize selectors after data is loaded
+                await MainActor.run {
+                    initializeDOBSelectors()
+                    initializePhysicalSelectors()
+                }
+            }
         }
+        .dismissKeyboardOnSwipe()
     }
     
     private func initializeDOBSelectors() {

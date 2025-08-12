@@ -23,16 +23,42 @@ struct EquipmentView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding()
                 } else if !equipment.isEmpty {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 15) {
-                        ForEach(equipment) { item in
-                            EquipmentCard(
-                                equipment: item,
-                                isSelected: viewModel.selectedEquipment.contains(item.id)
-                            ) {
-                                if viewModel.selectedEquipment.contains(item.id) {
-                                    viewModel.selectedEquipment.remove(item.id)
-                                } else {
-                                    viewModel.selectedEquipment.insert(item.id)
+                    // Show "None" option prominently at the top
+                    if let noneEquipment = equipment.first(where: { $0.name.lowercased() == "none" }) {
+                        EquipmentCard(
+                            equipment: noneEquipment,
+                            isSelected: viewModel.selectedEquipment.contains(noneEquipment.id)
+                        ) {
+                            if viewModel.selectedEquipment.contains(noneEquipment.id) {
+                                viewModel.selectedEquipment.remove(noneEquipment.id)
+                            } else {
+                                // If selecting "None", clear all other selections
+                                viewModel.selectedEquipment.removeAll()
+                                viewModel.selectedEquipment.insert(noneEquipment.id)
+                            }
+                        }
+                        .padding(.bottom, 10)
+                    }
+                    
+                    // Show other equipment options
+                    let otherEquipment = equipment.filter { $0.name.lowercased() != "none" }
+                    if !otherEquipment.isEmpty {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 15) {
+                            ForEach(otherEquipment) { item in
+                                EquipmentCard(
+                                    equipment: item,
+                                    isSelected: viewModel.selectedEquipment.contains(item.id)
+                                ) {
+                                    // If selecting other equipment, remove "None" selection
+                                    if let noneEquipment = equipment.first(where: { $0.name.lowercased() == "none" }) {
+                                        viewModel.selectedEquipment.remove(noneEquipment.id)
+                                    }
+                                    
+                                    if viewModel.selectedEquipment.contains(item.id) {
+                                        viewModel.selectedEquipment.remove(item.id)
+                                    } else {
+                                        viewModel.selectedEquipment.insert(item.id)
+                                    }
                                 }
                             }
                         }
@@ -57,6 +83,10 @@ struct EquipmentView: View {
         }
         .onAppear {
             loadEquipment()
+            // Load existing user selections from database
+            Task {
+                await viewModel.loadExistingSelectionsForCurrentStep()
+            }
         }
     }
     
@@ -66,41 +96,19 @@ struct EquipmentView: View {
         
         Task {
             do {
-                // Try to load from database first
+                // Always load from database - this is the source of truth
                 let dbEquipment = try await appState.profileService.getEquipment()
-                if !dbEquipment.isEmpty {
-                    self.equipment = dbEquipment
-                } else {
-                    // Fall back to default equipment if database is empty
-                    self.equipment = getDefaultEquipment()
-                }
+                self.equipment = dbEquipment
             } catch {
-                // If database fails, use default equipment
+                // If database fails, show error
                 print("Error loading equipment from database: \(error)")
-                self.equipment = getDefaultEquipment()
+                self.errorMessage = "Failed to load equipment options"
             }
             
             await MainActor.run {
                 isLoading = false
             }
         }
-    }
-    
-    private func getDefaultEquipment() -> [Equipment] {
-        return [
-            Equipment(id: 1, name: "Foam Roller"),
-            Equipment(id: 2, name: "Dumbbells"),
-            Equipment(id: 3, name: "Stretch Band"),
-            Equipment(id: 4, name: "Medicine Ball"),
-            Equipment(id: 5, name: "Squat Rack"),
-            Equipment(id: 6, name: "Bench Press"),
-            Equipment(id: 7, name: "Pull-up Bar"),
-            Equipment(id: 8, name: "Resistance Bands"),
-            Equipment(id: 9, name: "Yoga Mat"),
-            Equipment(id: 10, name: "Kettlebell"),
-            Equipment(id: 11, name: "Treadmill"),
-            Equipment(id: 12, name: "None")
-        ]
     }
 }
 

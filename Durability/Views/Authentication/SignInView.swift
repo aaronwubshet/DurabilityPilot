@@ -65,6 +65,7 @@ struct SignInView: View {
         .padding()
         .navigationTitle("Sign In")
         .navigationBarTitleDisplayMode(.inline)
+        .dismissKeyboardOnSwipe()
     }
 }
 

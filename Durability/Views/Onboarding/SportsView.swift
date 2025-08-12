@@ -11,7 +11,7 @@ struct SportsView: View {
          ("Tennis", "tennis.racket"),
          ("Short distance running", "figure.run"),
          ("Mid distance running", "figure.run.circle"),
-         ("Long distance running", "figure.run.square"),
+         ("Long distance running", "figure.run"),
          ("Triathlons", "bicycle"),
          ("CrossFit", "dumbbell"),
          ("Hyrox", "figure.strengthtraining.traditional")
@@ -48,9 +48,13 @@ struct SportsView: View {
              }
              .padding()
          }
-         .onAppear {
-             loadSports()
-         }
+                 .onAppear {
+            loadSports()
+            // Load existing user selections from database
+            Task {
+                await viewModel.loadExistingSelectionsForCurrentStep()
+            }
+        }
      }
      
      private func loadSports() {

@@ -9,12 +9,13 @@ class AuthService: ObservableObject {
     @Published var user: User?
     @Published var errorMessage: String?
     
+    // Apple Sign-In data storage
+    @Published var appleSignInData: AppleSignInData?
+    
     // Supabase client instance
     private let supabase: SupabaseClient
     
     init() {
-        // Initialize the Supabase client from our SupabaseManager
-        // Note: We will need to create/update SupabaseManager to provide a shared instance.
         self.supabase = SupabaseManager.shared.client
         
         // Check for an existing session when the service is created
@@ -30,7 +31,7 @@ class AuthService: ObservableObject {
         do {
             let session = try await supabase.auth.signUp(email: email, password: password)
             self.user = session.user
-            print("Successfully signed up user: \(session.user.email ?? "No Email")")
+            print("AuthService: Successfully signed up user: \(session.user.email ?? "No Email")")
             return true
         } catch {
             print("Error signing up: \(error.localizedDescription)")
@@ -44,7 +45,7 @@ class AuthService: ObservableObject {
         do {
             let session = try await supabase.auth.signIn(email: email, password: password)
             self.user = session.user
-            print("Successfully signed in user: \(session.user.email ?? "No Email")")
+            print("AuthService: Successfully signed in user: \(session.user.email ?? "No Email")")
             return true
         } catch {
             print("Error signing in: \(error.localizedDescription)")
@@ -58,6 +59,7 @@ class AuthService: ObservableObject {
         do {
             try await supabase.auth.signOut()
             self.user = nil
+            self.appleSignInData = nil
             print("Successfully signed out.")
         } catch {
             print("Error signing out: \(error.localizedDescription)")
@@ -78,7 +80,7 @@ class AuthService: ObservableObject {
     }
     
     // MARK: - Apple Sign In
-
+    
     /// Restores a persisted session from Keychain if available.
     @discardableResult
     func restoreSession() async -> Bool {
@@ -92,40 +94,122 @@ class AuthService: ObservableObject {
         }
     }
     
-    /// Initiates the Sign in with Apple flow.
-    func signInWithApple(credential: ASAuthorizationAppleIDCredential, nonce: String) async -> Bool {
-        guard let idToken = credential.identityToken else {
-            self.errorMessage = "Could not get ID token from Apple."
-            return false
-        }
-        
-        guard let idTokenString = String(data: idToken, encoding: .utf8) else {
-            self.errorMessage = "Could not convert Apple ID token to string."
-            return false
-        }
+    /// Signs in with Apple and creates a basic profile
+    func signInWithApple(idToken: String, nonce: String, fullName: String?, email: String?) async throws {
+        print("AuthService: Signing in with Apple...")
         
         do {
-            let credentials = OpenIDConnectCredentials(
-                provider: .apple,
-                idToken: idTokenString,
-                nonce: nonce
+            // Sign in with Supabase using OpenID Connect
+            let response = try await supabase.auth.signInWithIdToken(
+                credentials: OpenIDConnectCredentials(
+                    provider: .apple,
+                    idToken: idToken,
+                    nonce: nonce
+                )
             )
-            let session = try await supabase.auth.signInWithIdToken(credentials: credentials)
-            self.user = session.user
-            print("Successfully signed in with Apple for user: \(session.user.email ?? "No Email")")
-            return true
+            
+            // Store Apple Sign-In data for onboarding
+            let firstName = fullName?.components(separatedBy: " ").first
+            let lastName = fullName?.components(separatedBy: " ").dropFirst().joined(separator: " ")
+            
+            print("AuthService: Extracted name data - firstName: '\(firstName ?? "nil")', lastName: '\(lastName ?? "nil")'")
+            
+            self.appleSignInData = AppleSignInData(
+                firstName: firstName,
+                lastName: lastName,
+                email: email
+            )
+            
+            // Update the user property
+            self.user = response.user
+            
+            print("AuthService: Successfully signed in with Apple")
+            print("AuthService: User ID: \(response.user.id)")
+            print("AuthService: User Email: \(response.user.email ?? "No Email")")
+            
+            // Debug: Check session immediately after sign-in
+            do {
+                let session = try await supabase.auth.session
+                print("AuthService: Session check - User ID: \(session.user.id)")
+                print("AuthService: Session check - Access Token: \(session.accessToken.prefix(20))...")
+            } catch {
+                print("AuthService: Session check failed: \(error)")
+            }
+            
+            // Create basic profile if we have name data
+            if let fullName = fullName, !fullName.isEmpty {
+                await createBasicProfileFromAppleSignIn(
+                    appleData: self.appleSignInData!,
+                    userId: response.user.id.uuidString
+                )
+            }
+            
         } catch {
-            print("Error signing in with Apple: \(error.localizedDescription)")
-            self.errorMessage = error.localizedDescription
-            return false
+            print("AuthService: Apple Sign-In failed: \(error.localizedDescription)")
+            throw error
         }
+    }
+    
+    /// Creates a basic profile in Supabase with Apple Sign-In data
+    private func createBasicProfileFromAppleSignIn(appleData: AppleSignInData, userId: String) async {
+        do {
+            print("AuthService: Creating basic profile...")
+            print("AuthService: Writing firstName: '\(appleData.firstName ?? "nil")', lastName: '\(appleData.lastName ?? "nil")' to database")
+            
+            // Use direct database write like in DatabaseTestView
+            try await SupabaseManager.shared.client
+                .from("profiles")
+                .upsert([
+                    "id": userId,
+                    "first_name": appleData.firstName ?? "",
+                    "last_name": appleData.lastName ?? ""
+                ])
+                .execute()
+            
+            print("AuthService: Basic profile created successfully")
+            
+        } catch {
+            print("AuthService: Failed to create basic profile: \(error.localizedDescription)")
+            // Don't throw here - profile creation failure shouldn't break sign-in
+        }
+    }
+    
+    /// Retrieves Apple Sign-In data for onboarding
+    func getAppleSignInData() -> AppleSignInData? {
+        return appleSignInData
+    }
+    
+    /// Clears Apple Sign-In data after it's been used in onboarding
+    func clearAppleSignInData() {
+        appleSignInData = nil
+    }
+    
+    /// Clears all session data and forces a fresh sign-in
+    func clearAllSessionData() async {
+        do {
+            try await supabase.auth.signOut()
+            self.user = nil
+            self.appleSignInData = nil
+            print("AuthService: Session data cleared")
+        } catch {
+            print("AuthService: Error clearing session: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Checks if there's an existing session
+    func hasExistingSession() -> Bool {
+        return user != nil
     }
 }
 
-// MARK: - Supabase Manager (Singleton)
-// We'll create a simple singleton to hold our Supabase client instance.
-// This ensures we only initialize it once.
+// MARK: - Apple Sign-In Data Model
+struct AppleSignInData {
+    let firstName: String?
+    let lastName: String?
+    let email: String?
+}
 
+// MARK: - Supabase Manager (Singleton)
 class SupabaseManager {
     static let shared = SupabaseManager()
     

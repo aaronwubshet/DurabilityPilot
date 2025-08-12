@@ -41,9 +41,13 @@ struct GoalsView: View {
              }
              .padding()
          }
-         .onAppear {
-             loadGoals()
-         }
+                 .onAppear {
+            loadGoals()
+            // Load existing user selections from database
+            Task {
+                await viewModel.loadExistingSelectionsForCurrentStep()
+            }
+        }
      }
      
      private func loadGoals() {
