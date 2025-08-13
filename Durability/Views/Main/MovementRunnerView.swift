@@ -116,28 +116,14 @@ struct MovementRunnerView: View {
 }
 
 #Preview {
-    let mockWorkout = DailyWorkout(
-        id: UUID().uuidString,
-        planPhaseId: UUID().uuidString,
-        workoutDate: Date(),
-        status: .pending,
-        movements: [
-            DailyWorkoutMovement(
-                id: UUID().uuidString,
-                dailyWorkoutId: UUID().uuidString,
-                movementId: 1,
-                sequence: 1,
-                status: .pending,
-                assignedIntensity: Intensity(reps: 10, sets: 3),
-                recoveryImpactScore: 0.3,
-                resilienceImpactScore: 0.7,
-                resultsImpactScore: 0.8
-            )
-        ]
-    )
-    
-    return MovementRunnerView(
-        workout: mockWorkout,
+    MovementRunnerView(
+        workout: DailyWorkout(
+            id: UUID().uuidString,
+            planPhaseId: UUID().uuidString,
+            workoutDate: Date(),
+            status: .pending,
+            movements: []
+        ),
         startIndex: 0,
         onFinishMovement: { _ in }
     )

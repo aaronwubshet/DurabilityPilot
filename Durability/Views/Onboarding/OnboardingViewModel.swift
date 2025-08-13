@@ -15,6 +15,7 @@ enum OnboardingStep: Int, CaseIterable {
 class OnboardingViewModel: ObservableObject {
     @Published var currentStep: OnboardingStep = .healthKit
     @Published var isLoading = false
+    @Published var isTransitioningToSports = false
     @Published var errorMessage: String?
     
     // Access to app state
@@ -40,6 +41,13 @@ class OnboardingViewModel: ObservableObject {
         do {
             let existingProfile = try await appState.profileService.getProfile(userId: userId)
             
+            print("🔄 OnboardingViewModel: loadExistingProfileData - Loading from database:")
+            print("  - existingProfile.firstName: '\(existingProfile.firstName)'")
+            print("  - existingProfile.lastName: '\(existingProfile.lastName)'")
+            print("  - existingProfile.dateOfBirth: \(existingProfile.dateOfBirth?.description ?? "nil")")
+            print("  - existingProfile.sex: \(existingProfile.sex?.rawValue ?? "nil")")
+            print("  - existingProfile.age: \(existingProfile.age ?? -1)")
+            
             // Populate fields with existing data
             await MainActor.run {
                 firstName = existingProfile.firstName
@@ -47,10 +55,16 @@ class OnboardingViewModel: ObservableObject {
                 
                 if let dateOfBirth = existingProfile.dateOfBirth {
                     self.dateOfBirth = dateOfBirth
+                    print("✅ OnboardingViewModel: Set dateOfBirth to: \(dateOfBirth)")
+                } else {
+                    print("⚠️ OnboardingViewModel: No dateOfBirth in database")
                 }
                 
                 if let sex = existingProfile.sex {
                     self.sex = sex
+                    print("✅ OnboardingViewModel: Set sex to: \(sex.rawValue)")
+                } else {
+                    print("⚠️ OnboardingViewModel: No sex in database")
                 }
                 
                 if let heightCm = existingProfile.heightCm {
@@ -66,10 +80,10 @@ class OnboardingViewModel: ObservableObject {
                 }
             }
             
-            print("OnboardingViewModel: Loaded existing profile data from database")
+            print("✅ OnboardingViewModel: Loaded existing profile data from database")
             
         } catch {
-            print("OnboardingViewModel: No existing profile found or error loading: \(error)")
+            print("❌ OnboardingViewModel: No existing profile found or error loading: \(error)")
             // This is normal for first-time users
         }
     }
@@ -77,7 +91,7 @@ class OnboardingViewModel: ObservableObject {
     // Basic Info
     @Published var firstName = ""
     @Published var lastName = ""
-    @Published var dateOfBirth = Date()
+    @Published var dateOfBirth: Date? = nil
     @Published var sex: UserProfile.Sex? = nil
     @Published var heightFeet = ""
     @Published var heightInches = ""
@@ -111,7 +125,7 @@ class OnboardingViewModel: ObservableObject {
     
     var calculatedAge: Int {
         let calendar = Calendar.current
-        let ageComponents = calendar.dateComponents([.year], from: dateOfBirth, to: Date())
+        let ageComponents = calendar.dateComponents([.year], from: dateOfBirth ?? Date(), to: Date())
         return ageComponents.year ?? 0
     }
     
@@ -143,23 +157,43 @@ class OnboardingViewModel: ObservableObject {
         }
     }
     
-    func nextStep() {
-        // Save current step's data before proceeding
-        Task {
-            await saveCurrentStepData()
+    func nextStep() async {
+        print("OnboardingViewModel: nextStep called from step: \(currentStep)")
+        
+        // Dismiss keyboard when moving between steps
+        dismissKeyboard()
+        
+        // Set transition loading state when moving from training plan to sports
+        if currentStep == .trainingPlan {
+            isTransitioningToSports = true
         }
         
+        // Save current step's data before proceeding
+        print("OnboardingViewModel: Calling saveCurrentStepData...")
+        await saveCurrentStepData()
+        print("OnboardingViewModel: saveCurrentStepData completed")
+        
         if currentStep.rawValue < OnboardingStep.allCases.count - 1 {
+            let previousStep = currentStep
             currentStep = OnboardingStep(rawValue: currentStep.rawValue + 1)!
+            print("OnboardingViewModel: Moving from step \(previousStep) to step \(currentStep)")
             
             // Populate name fields when reaching basic info step
             if currentStep == .basicInfo {
                 populateNameFromAppleSignIn()
             }
+            
+            // Clear transition loading state after moving to sports
+            if currentStep == .sports {
+                isTransitioningToSports = false
+            }
         }
     }
     
     func previousStep() {
+        // Dismiss keyboard when moving between steps
+        dismissKeyboard()
+        
         if currentStep.rawValue > 0 {
             currentStep = OnboardingStep(rawValue: currentStep.rawValue - 1)!
         }
@@ -170,6 +204,12 @@ class OnboardingViewModel: ObservableObject {
         print("OnboardingViewModel: Current step: \(currentStep)")
         print("OnboardingViewModel: Is last step: \(currentStep == OnboardingStep.allCases.last)")
         
+        // Add protection against accidental completion
+        guard currentStep == OnboardingStep.allCases.last else {
+            print("OnboardingViewModel: ERROR - completeOnboarding called on non-final step: \(currentStep)")
+            return
+        }
+        
         guard let appState = appState else {
             print("OnboardingViewModel: ERROR - AppState not available")
             errorMessage = "App state not available"
@@ -179,28 +219,33 @@ class OnboardingViewModel: ObservableObject {
         print("OnboardingViewModel: AppState available")
         print("OnboardingViewModel: Auth user: \(appState.authService.user?.id.uuidString ?? "nil")")
         
+        // Save current step data before completing onboarding
+        print("OnboardingViewModel: Saving current step data before completion...")
+        await saveCurrentStepData()
+        print("OnboardingViewModel: Current step data saved")
+        
+        // Validate required fields first
+        guard let userId = appState.authService.user?.id.uuidString, !userId.isEmpty else {
+            print("OnboardingViewModel: ERROR - User ID is missing")
+            errorMessage = "User ID is missing"
+            return
+        }
+        
         isLoading = true
         defer { isLoading = false }
         
         var imageURL: String?
         if let image = trainingPlanImage {
             do {
-                imageURL = try await appState.storageService.uploadImage(
+                imageURL = try await appState.storageService.uploadTrainingPlanImage(
                     from: image.jpegData(compressionQuality: 0.8),
-                    bucket: "training-plan-images"
+                    profileId: userId
                 )
                 print("OnboardingViewModel: Training plan image uploaded: \(imageURL ?? "nil")")
             } catch {
                 print("OnboardingViewModel: Failed to upload image: \(error)")
                 errorMessage = "Failed to upload image: \(error.localizedDescription)"
             }
-        }
-        
-        // Validate required fields
-        guard let userId = appState.authService.user?.id.uuidString, !userId.isEmpty else {
-            print("OnboardingViewModel: ERROR - User ID is missing")
-            errorMessage = "User ID is missing"
-            return
         }
         
         guard !firstName.isEmpty, !lastName.isEmpty else {
@@ -210,21 +255,22 @@ class OnboardingViewModel: ObservableObject {
         }
         
         let heightCm = convertHeightToCm()
-        let weightKg = Double(weight)
+        let weightLbs = Double(weight)
         
         print("Creating profile with validated data:")
         print("- User ID: \(userId)")
         print("- First Name: \(firstName)")
         print("- Last Name: \(lastName)")
-        print("- Date of Birth: \(dateOfBirth)")
+        print("- Date of Birth: \(dateOfBirth ?? Date())")
         print("- Age: \(calculatedAge)")
         print("- Sex: \(sex?.rawValue ?? "nil")")
         print("- Height (cm): \(heightCm ?? -1)")
-        print("- Weight (kg): \(weightKg ?? -1)")
+        print("- Weight (lbs): \(weightLbs ?? -1)")
         print("- Selected Sports: \(selectedSports)")
         print("- Selected Goals: \(selectedGoals)")
         
-        let profile = UserProfile(
+        // Create profile with weight in kg (converted from lbs)
+        var profile = UserProfile(
             id: userId,
             firstName: firstName,
             lastName: lastName,
@@ -232,7 +278,7 @@ class OnboardingViewModel: ObservableObject {
             age: calculatedAge,
             sex: sex,
             heightCm: heightCm,
-            weightKg: weightKg,
+            weightKg: nil, // Will be set using the conversion method
             isPilot: false,
             onboardingCompleted: true,
             assessmentCompleted: false,
@@ -241,6 +287,11 @@ class OnboardingViewModel: ObservableObject {
             createdAt: Date(),
             updatedAt: Date()
         )
+        
+        // Convert weight from lbs to kg
+        if let weightLbs = weightLbs {
+            profile.setWeightLbs(weightLbs)
+        }
         
         print("OnboardingViewModel: Created profile object:")
         print("  - ID: \(profile.id)")
@@ -329,79 +380,100 @@ class OnboardingViewModel: ObservableObject {
     
     /// Saves equipment selection to database immediately
     func saveEquipmentSelection() async {
+        print("🔄 OnboardingViewModel: saveEquipmentSelection called")
+        
         guard let appState = appState,
-              let userId = appState.authService.user?.id.uuidString else { return }
+              let userId = appState.authService.user?.id.uuidString else { 
+            print("❌ OnboardingViewModel: Cannot save equipment - missing appState or userId")
+            return 
+        }
+        
+        print("🔄 OnboardingViewModel: Attempting to save equipment selection")
+        print("🔄 OnboardingViewModel: Selected equipment count: \(selectedEquipment.count)")
+        print("🔄 OnboardingViewModel: Selected equipment IDs: \(Array(selectedEquipment))")
         
         do {
             try await appState.profileService.saveUserEquipment(profileId: userId, equipmentIds: Array(selectedEquipment))
-            print("OnboardingViewModel: Equipment selection saved immediately")
+            print("✅ OnboardingViewModel: Equipment selection saved successfully")
         } catch {
-            print("OnboardingViewModel: Failed to save equipment selection: \(error)")
+            print("❌ OnboardingViewModel: Failed to save equipment selection: \(error)")
+            print("❌ OnboardingViewModel: Error details: \(error.localizedDescription)")
         }
     }
     
     /// Saves goals selection to database immediately
     func saveGoalsSelection() async {
+        print("🔄 OnboardingViewModel: saveGoalsSelection called")
+        
         guard let appState = appState,
               let userId = appState.authService.user?.id.uuidString else { return }
         
+        print("🔄 OnboardingViewModel: Attempting to save goals selection")
+        print("🔄 OnboardingViewModel: Selected goals count: \(selectedGoals.count)")
+        print("🔄 OnboardingViewModel: Selected goals IDs: \(Array(selectedGoals))")
+        
         do {
             try await appState.profileService.saveUserGoals(profileId: userId, goalIds: Array(selectedGoals))
-            print("OnboardingViewModel: Goals selection saved immediately")
+            print("✅ OnboardingViewModel: Goals selection saved successfully")
         } catch {
-            print("OnboardingViewModel: Failed to save goals selection: \(error)")
+            print("❌ OnboardingViewModel: Failed to save goals selection: \(error)")
         }
     }
     
     /// Saves sports selection to database immediately
     func saveSportsSelection() async {
+        print("🔄 OnboardingViewModel: saveSportsSelection called")
+        
         guard let appState = appState,
               let userId = appState.authService.user?.id.uuidString else { return }
         
+        print("🔄 OnboardingViewModel: Attempting to save sports selection")
+        print("🔄 OnboardingViewModel: Selected sports count: \(selectedSports.count)")
+        print("🔄 OnboardingViewModel: Selected sports IDs: \(Array(selectedSports))")
+        
         do {
             try await appState.profileService.saveUserSports(profileId: userId, sportIds: Array(selectedSports))
-            print("OnboardingViewModel: Sports selection saved immediately")
+            print("✅ OnboardingViewModel: Sports selection saved successfully")
         } catch {
-            print("OnboardingViewModel: Failed to save sports selection: \(error)")
+            print("❌ OnboardingViewModel: Failed to save sports selection: \(error)")
         }
     }
     
     /// Saves injuries selection to database immediately
     func saveInjuriesSelection() async {
+        print("🔄 OnboardingViewModel: saveInjuriesSelection called")
+        
         guard let appState = appState,
               let userId = appState.authService.user?.id.uuidString else { return }
+        
+        print("🔄 OnboardingViewModel: Attempting to save injuries selection")
+        print("🔄 OnboardingViewModel: Selected injuries count: \(selectedInjuries.count)")
+        print("🔄 OnboardingViewModel: Selected injuries IDs: \(Array(selectedInjuries))")
+        print("🔄 OnboardingViewModel: Other injury text: '\(otherInjuryText)'")
         
         do {
             var injuries: [UserInjury] = []
             
             // Add selected injuries
             for injuryId in selectedInjuries {
+                // Check if this is the "Other" injury (ID 9 based on the database)
+                let isOtherInjury = injuryId == 9 // "Other" injury ID
+                
                 injuries.append(UserInjury(
-                    id: nil, // Database will auto-generate ID
                     profileId: userId,
                     injuryId: injuryId,
-                    otherInjuryText: nil,
+                    otherInjuryText: isOtherInjury ? otherInjuryText.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
                     isActive: true,
                     reportedAt: Date()
                 ))
             }
             
-            // Add other injury text if provided
-            if !otherInjuryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                injuries.append(UserInjury(
-                    id: nil, // Database will auto-generate ID
-                    profileId: userId,
-                    injuryId: nil,
-                    otherInjuryText: otherInjuryText.trimmingCharacters(in: .whitespacesAndNewlines),
-                    isActive: true,
-                    reportedAt: Date()
-                ))
-            }
+            print("🔄 OnboardingViewModel: Prepared \(injuries.count) injury records for saving")
             
             try await appState.profileService.saveUserInjuries(profileId: userId, injuries: injuries)
-            print("OnboardingViewModel: Injuries selection saved immediately")
+            print("✅ OnboardingViewModel: Injuries selection saved successfully")
         } catch {
-            print("OnboardingViewModel: Failed to save injuries selection: \(error)")
+            print("❌ OnboardingViewModel: Failed to save injuries selection: \(error)")
         }
     }
     
@@ -429,9 +501,9 @@ class OnboardingViewModel: ObservableObject {
         
         do {
             // Upload image to storage
-            let imageURL = try await appState.storageService.uploadImage(
+            let imageURL = try await appState.storageService.uploadTrainingPlanImage(
                 from: image.jpegData(compressionQuality: 0.8),
-                bucket: "training-plan-images"
+                profileId: userId
             )
             
             // Update profile with image URL
@@ -454,6 +526,13 @@ class OnboardingViewModel: ObservableObject {
         do {
             var profile = try await appState.profileService.getProfile(userId: userId)
             
+            print("🔄 OnboardingViewModel: saveBasicProfileInfo - Current values:")
+            print("  - firstName: '\(firstName)'")
+            print("  - lastName: '\(lastName)'")
+            print("  - dateOfBirth: \(dateOfBirth?.description ?? "nil")")
+            print("  - sex: \(sex?.rawValue ?? "nil")")
+            print("  - calculatedAge: \(calculatedAge)")
+            
             // Update basic profile fields
             profile.firstName = firstName
             profile.lastName = lastName
@@ -465,16 +544,23 @@ class OnboardingViewModel: ObservableObject {
             if let heightCm = convertHeightToCm() {
                 profile.heightCm = heightCm
             }
-            if let weightKg = Double(weight) {
-                profile.weightKg = weightKg * 0.453592 // Convert lbs to kg
+            if let weightLbs = Double(weight) {
+                profile.setWeightLbs(weightLbs) // Convert lbs to kg using the new method
             }
             
             profile.updatedAt = Date()
             
+            print("🔄 OnboardingViewModel: saveBasicProfileInfo - Profile values after update:")
+            print("  - profile.firstName: '\(profile.firstName)'")
+            print("  - profile.lastName: '\(profile.lastName)'")
+            print("  - profile.dateOfBirth: \(profile.dateOfBirth?.description ?? "nil")")
+            print("  - profile.sex: \(profile.sex?.rawValue ?? "nil")")
+            print("  - profile.age: \(profile.age ?? -1)")
+            
             try await appState.profileService.updateProfile(profile)
-            print("OnboardingViewModel: Basic profile info saved immediately")
+            print("✅ OnboardingViewModel: Basic profile info saved immediately")
         } catch {
-            print("OnboardingViewModel: Failed to save basic profile info: \(error)")
+            print("❌ OnboardingViewModel: Failed to save basic profile info: \(error)")
         }
     }
     
@@ -482,21 +568,27 @@ class OnboardingViewModel: ObservableObject {
     private func saveCurrentStepData() async {
         guard let appState = appState else { return }
         
+        print("🔄 OnboardingViewModel: saveCurrentStepData called for step: \(currentStep)")
+        
         switch currentStep {
         case .basicInfo:
             // Save basic profile info (name, date of birth, height, weight, sex)
+            print("🔄 OnboardingViewModel: Saving basic info...")
             await saveBasicProfileInfo()
             
         case .equipment:
             // Save equipment selections
+            print("🔄 OnboardingViewModel: Saving equipment selections...")
             await saveEquipmentSelection()
             
         case .injuries:
             // Save injury selections
+            print("🔄 OnboardingViewModel: Saving injury selections...")
             await saveInjuriesSelection()
             
         case .trainingPlan:
             // Save training plan info and image
+            print("🔄 OnboardingViewModel: Saving training plan...")
             await saveTrainingPlanInfo()
             if trainingPlanImage != nil {
                 await saveTrainingPlanImage()
@@ -504,16 +596,21 @@ class OnboardingViewModel: ObservableObject {
             
         case .sports:
             // Save sports selections
+            print("🔄 OnboardingViewModel: Saving sports selections...")
             await saveSportsSelection()
             
         case .goals:
             // Save goals selections
+            print("🔄 OnboardingViewModel: Saving goals selections...")
             await saveGoalsSelection()
             
         case .healthKit:
             // HealthKit data is already saved when the step is completed
+            print("🔄 OnboardingViewModel: HealthKit step - no data to save")
             break
         }
+        
+        print("✅ OnboardingViewModel: saveCurrentStepData completed for step: \(currentStep)")
     }
     
     /// Loads existing user selections from the database for the current step
@@ -547,13 +644,19 @@ class OnboardingViewModel: ObservableObject {
     private func loadExistingEquipmentSelections(userId: String) async {
         guard let appState = appState else { return }
         
-        do {
-            let equipmentIds = try await appState.profileService.getUserEquipment(profileId: userId)
-            await MainActor.run {
-                selectedEquipment = Set(equipmentIds)
+        // Only load from database if user hasn't made any current selections
+        if selectedEquipment.isEmpty {
+            do {
+                let equipmentIds = try await appState.profileService.getUserEquipment(profileId: userId)
+                await MainActor.run {
+                    selectedEquipment = Set(equipmentIds)
+                    print("OnboardingViewModel: Loaded \(equipmentIds.count) existing equipment selections from database: \(equipmentIds)")
+                }
+            } catch {
+                print("Failed to load existing equipment selections: \(error)")
             }
-        } catch {
-            print("Failed to load existing equipment selections: \(error)")
+        } else {
+            print("OnboardingViewModel: Skipping database load - user has current equipment selections: \(selectedEquipment)")
         }
     }
     
@@ -561,20 +664,26 @@ class OnboardingViewModel: ObservableObject {
     private func loadExistingInjurySelections(userId: String) async {
         guard let appState = appState else { return }
         
-        do {
-            let userInjuries = try await appState.profileService.getUserInjuries(profileId: userId)
-            await MainActor.run {
-                // Load injury IDs
-                let injuryIds = userInjuries.compactMap { $0.injuryId }
-                selectedInjuries = Set(injuryIds)
-                
-                // Load other injury text
-                if let otherInjury = userInjuries.first(where: { $0.otherInjuryText != nil }) {
-                    otherInjuryText = otherInjury.otherInjuryText ?? ""
+        // Only load from database if user hasn't made any current selections
+        if selectedInjuries.isEmpty && otherInjuryText.isEmpty {
+            do {
+                let userInjuries = try await appState.profileService.getUserInjuries(profileId: userId)
+                await MainActor.run {
+                    // Load injury IDs
+                    let injuryIds = userInjuries.compactMap { $0.injuryId }
+                    selectedInjuries = Set(injuryIds)
+                    
+                    // Load other injury text from the "Other" injury (ID 9)
+                    if let otherInjury = userInjuries.first(where: { $0.injuryId == 9 && $0.otherInjuryText != nil }) {
+                        otherInjuryText = otherInjury.otherInjuryText ?? ""
+                    }
+                    print("OnboardingViewModel: Loaded \(injuryIds.count) existing injury selections from database: \(injuryIds)")
                 }
+            } catch {
+                print("Failed to load existing injury selections: \(error)")
             }
-        } catch {
-            print("Failed to load existing injury selections: \(error)")
+        } else {
+            print("OnboardingViewModel: Skipping database load - user has current injury selections: \(selectedInjuries)")
         }
     }
     
@@ -582,13 +691,19 @@ class OnboardingViewModel: ObservableObject {
     private func loadExistingSportsSelections(userId: String) async {
         guard let appState = appState else { return }
         
-        do {
-            let sportIds = try await appState.profileService.getUserSports(profileId: userId)
-            await MainActor.run {
-                selectedSports = Set(sportIds)
+        // Only load from database if user hasn't made any current selections
+        if selectedSports.isEmpty {
+            do {
+                let sportIds = try await appState.profileService.getUserSports(profileId: userId)
+                await MainActor.run {
+                    selectedSports = Set(sportIds)
+                    print("OnboardingViewModel: Loaded \(sportIds.count) existing sports selections from database: \(sportIds)")
+                }
+            } catch {
+                print("Failed to load existing sports selections: \(error)")
             }
-        } catch {
-            print("Failed to load existing sports selections: \(error)")
+        } else {
+            print("OnboardingViewModel: Skipping database load - user has current sports selections: \(selectedSports)")
         }
     }
     
@@ -596,13 +711,19 @@ class OnboardingViewModel: ObservableObject {
     private func loadExistingGoalsSelections(userId: String) async {
         guard let appState = appState else { return }
         
-        do {
-            let goalIds = try await appState.profileService.getUserGoals(profileId: userId)
-            await MainActor.run {
-                selectedGoals = Set(goalIds)
+        // Only load from database if user hasn't made any current selections
+        if selectedGoals.isEmpty {
+            do {
+                let goalIds = try await appState.profileService.getUserGoals(profileId: userId)
+                await MainActor.run {
+                    selectedGoals = Set(goalIds)
+                    print("OnboardingViewModel: Loaded \(goalIds.count) existing goals selections from database: \(goalIds)")
+                }
+            } catch {
+                print("Failed to load existing goals selections: \(error)")
             }
-        } catch {
-            print("Failed to load existing goals selections: \(error)")
+        } else {
+            print("OnboardingViewModel: Skipping database load - user has current goals selections: \(selectedGoals)")
         }
     }
     
@@ -610,64 +731,94 @@ class OnboardingViewModel: ObservableObject {
     private func loadExistingTrainingPlanData(userId: String) async {
         guard let appState = appState else { return }
         
-        do {
-            let profile = try await appState.profileService.getProfile(userId: userId)
-            await MainActor.run {
-                hasTrainingPlan = profile.trainingPlanInfo != nil || profile.trainingPlanImageURL != nil
-                trainingPlanInfo = profile.trainingPlanInfo ?? ""
-                // Note: trainingPlanImage would need to be loaded from storage if needed
+        // Only load from database if user hasn't made any current selections
+        if trainingPlanInfo.isEmpty && !hasTrainingPlan {
+            do {
+                let profile = try await appState.profileService.getProfile(userId: userId)
+                await MainActor.run {
+                    hasTrainingPlan = profile.trainingPlanInfo != nil || profile.trainingPlanImageURL != nil
+                    trainingPlanInfo = profile.trainingPlanInfo ?? ""
+                    // Note: trainingPlanImage would need to be loaded from storage if needed
+                    print("OnboardingViewModel: Loaded existing training plan data from database")
+                }
+            } catch {
+                print("Failed to load existing training plan data: \(error)")
             }
-        } catch {
-            print("Failed to load existing training plan data: \(error)")
+        } else {
+            print("OnboardingViewModel: Skipping database load - user has current training plan data")
         }
+    }
+    
+    /// Dismisses the keyboard
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     /// Populates physical data from HealthKit and database if available
     func populateHealthKitDataIfAvailable() async {
         guard let appState = appState else { return }
         
+        print("🔄 OnboardingViewModel: populateHealthKitDataIfAvailable - Starting...")
+        print("🔄 OnboardingViewModel: Current values before population:")
+        print("  - dateOfBirth: \(dateOfBirth?.description ?? "nil")")
+        print("  - sex: \(sex?.rawValue ?? "nil")")
+        print("  - heightFeet: '\(heightFeet)', heightInches: '\(heightInches)'")
+        print("  - weight: '\(weight)'")
+        
+        // First, ensure HealthKit data is fetched if authorized
+        if appState.healthKitService.isAuthorized {
+            print("🔄 OnboardingViewModel: HealthKit is authorized, fetching latest data...")
+            await appState.healthKitService.fetchTodayHealthData()
+        } else {
+            print("⚠️ OnboardingViewModel: HealthKit is not authorized yet")
+        }
+        
         // First try to load from database (this includes data written from previous steps)
         if let userId = appState.authService.user?.id.uuidString,
            let profile = try? await appState.profileService.getProfile(userId: userId) {
             
-                            await MainActor.run {
-                    // Populate name fields from database (prioritize database over empty fields)
-                    if !profile.firstName.isEmpty {
-                        firstName = profile.firstName
-                    }
-                    if !profile.lastName.isEmpty {
-                        lastName = profile.lastName
-                    }
+            await MainActor.run {
+                // Populate name fields from database (prioritize database over empty fields)
+                if !profile.firstName.isEmpty {
+                    firstName = profile.firstName
+                }
+                if !profile.lastName.isEmpty {
+                    lastName = profile.lastName
+                }
+            
+                // Populate height from database
+                if let heightCm = profile.heightCm {
+                    let inches = heightCm / 2.54
+                    let feet = Int(inches / 12.0)
+                    let remInches = Int((inches - Double(feet) * 12.0).rounded())
+                    heightFeet = String(max(0, feet))
+                    heightInches = String(max(0, min(remInches, 11)))
+                }
                 
-                                    // Populate height from database
-                    if let heightCm = profile.heightCm {
-                        let inches = heightCm / 2.54
-                        let feet = Int(inches / 12.0)
-                        let remInches = Int((inches - Double(feet) * 12.0).rounded())
-                        heightFeet = String(max(0, feet))
-                        heightInches = String(max(0, min(remInches, 11)))
-                    }
-                    
-                    // Populate weight from database
-                    if let weightKg = profile.weightKg {
-                        let weightLbs = Int((weightKg * 2.20462).rounded())
-                        weight = String(weightLbs)
-                    }
-                    
-                    // Populate sex from database
-                    if let profileSex = profile.sex {
-                        sex = profileSex
-                    }
-                    
-                    // Populate date of birth from database
-                    if let profileDob = profile.dateOfBirth {
-                        dateOfBirth = profileDob
-                    }
+                // Populate weight from database
+                if let weightKg = profile.weightKg {
+                    let weightLbs = Int((weightKg * 2.20462).rounded())
+                    weight = String(weightLbs)
+                }
+                
+                // Populate sex from database
+                if let profileSex = profile.sex {
+                    sex = profileSex
+                    print("✅ OnboardingViewModel: Set sex from database: \(profileSex.rawValue)")
+                }
+                
+                // Populate date of birth from database
+                if let profileDob = profile.dateOfBirth {
+                    dateOfBirth = profileDob
+                    print("✅ OnboardingViewModel: Set dateOfBirth from database: \(profileDob)")
+                }
             }
         }
         
         // Only fall back to HealthKit if database fields are still empty
         Task {
+            print("🔄 OnboardingViewModel: Checking HealthKit fallback data...")
+            
             if heightFeet.isEmpty && heightInches.isEmpty,
                let heightM = appState.healthKitService.healthData?.height {
                 let heightCm = heightM * 100.0
@@ -677,6 +828,7 @@ class OnboardingViewModel: ObservableObject {
                 await MainActor.run {
                     heightFeet = String(feet)
                     heightInches = String(inches)
+                    print("✅ OnboardingViewModel: Set height from HealthKit: \(feet)' \(inches)\"")
                 }
             }
             
@@ -685,33 +837,58 @@ class OnboardingViewModel: ObservableObject {
                 let weightLbs = Int(weightKg * 2.20462)
                 await MainActor.run {
                     weight = String(weightLbs)
+                    print("✅ OnboardingViewModel: Set weight from HealthKit: \(weightLbs) lbs")
                 }
             }
             
-            if sex == nil,
-               let healthKitSex = appState.healthKitService.getBiologicalSex() {
-                await MainActor.run {
-                    switch healthKitSex {
-                    case .female:
-                        sex = .female
-                    case .male:
-                        sex = .male
-                    case .other:
-                        sex = .other
-                    case .notSet:
-                        break
-                    @unknown default:
-                        break
+            // Fix: Check if sex is nil AND we can get it from HealthKit
+            if sex == nil {
+                print("🔄 OnboardingViewModel: Sex is nil, attempting to get from HealthKit...")
+                if let healthKitSex = appState.healthKitService.getBiologicalSex() {
+                    await MainActor.run {
+                        switch healthKitSex {
+                        case .female:
+                            sex = .female
+                            print("✅ OnboardingViewModel: Set sex from HealthKit: female")
+                        case .male:
+                            sex = .male
+                            print("✅ OnboardingViewModel: Set sex from HealthKit: male")
+                        case .other:
+                            sex = .other
+                            print("✅ OnboardingViewModel: Set sex from HealthKit: other")
+                        case .notSet:
+                            print("⚠️ OnboardingViewModel: Biological sex not set in HealthKit")
+                        @unknown default:
+                            print("⚠️ OnboardingViewModel: Unknown biological sex value from HealthKit")
+                        }
                     }
+                } else {
+                    print("❌ OnboardingViewModel: Could not retrieve biological sex from HealthKit")
                 }
+            } else {
+                print("ℹ️ OnboardingViewModel: Sex already set to: \(sex?.rawValue ?? "nil")")
             }
             
-            if dateOfBirth == Date(), // Only if dateOfBirth is still the default date
-               let dob = appState.healthKitService.getDateOfBirth() {
-                await MainActor.run {
-                    dateOfBirth = dob
+            // Fix: Check if dateOfBirth is nil AND we can get it from HealthKit
+            if dateOfBirth == nil {
+                print("🔄 OnboardingViewModel: dateOfBirth is nil, attempting to get from HealthKit...")
+                if let dob = appState.healthKitService.getDateOfBirth() {
+                    await MainActor.run {
+                        dateOfBirth = dob
+                        print("✅ OnboardingViewModel: Set dateOfBirth from HealthKit: \(dob)")
+                    }
+                } else {
+                    print("❌ OnboardingViewModel: Could not retrieve date of birth from HealthKit")
                 }
+            } else {
+                print("ℹ️ OnboardingViewModel: dateOfBirth already set to: \(dateOfBirth?.description ?? "nil")")
             }
+            
+            print("🔄 OnboardingViewModel: Final values after HealthKit population:")
+            print("  - dateOfBirth: \(dateOfBirth?.description ?? "nil")")
+            print("  - sex: \(sex?.rawValue ?? "nil")")
+            print("  - heightFeet: '\(heightFeet)', heightInches: '\(heightInches)'")
+            print("  - weight: '\(weight)'")
         }
     }
 }

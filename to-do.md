@@ -1,2 +1,3 @@
-* add a summary page at the end of the assessment/onboarding flow before plan generation
 
+
+* profile page needs a better way to update equipment, training plan, goals, injuries, and sports

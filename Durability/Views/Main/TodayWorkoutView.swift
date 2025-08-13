@@ -10,18 +10,23 @@ struct TodayWorkoutView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if isLoading {
-                        ProgressView("Loading today's workout...")
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if let workout = currentWorkout {
-                        TodayWorkoutContent(workout: workout)
-                    } else {
-                        NoWorkoutView()
+            ZStack {
+                Color.darkSpaceGrey
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if isLoading {
+                            ProgressView("Loading today's workout...")
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else if let workout = currentWorkout {
+                            TodayWorkoutContent(workout: workout)
+                        } else {
+                            NoWorkoutView()
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
             .navigationTitle("Today's Workout")
             .toolbar {
@@ -42,43 +47,43 @@ struct TodayWorkoutView: View {
         isLoading = true
         
         Task {
-            // TODO: Load today's workout from the plan
-            // For now, create a mock workout
-            let mockWorkout = DailyWorkout(
-                id: UUID().uuidString,
-                planPhaseId: UUID().uuidString,
-                workoutDate: Date(),
-                status: .pending,
-                movements: [
-                    DailyWorkoutMovement(
-                        id: UUID().uuidString,
-                        dailyWorkoutId: UUID().uuidString,
-                        movementId: 1,
-                        sequence: 1,
-                        status: .pending,
-                        assignedIntensity: Intensity(reps: 10, sets: 3),
-                        recoveryImpactScore: 0.3,
-                        resilienceImpactScore: 0.7,
-                        resultsImpactScore: 0.8
-                    ),
-                    DailyWorkoutMovement(
-                        id: UUID().uuidString,
-                        dailyWorkoutId: UUID().uuidString,
-                        movementId: 2,
-                        sequence: 2,
-                        status: .pending,
-                        assignedIntensity: Intensity(reps: 8, sets: 3),
-                        recoveryImpactScore: 0.2,
-                        resilienceImpactScore: 0.8,
-                        resultsImpactScore: 0.9
-                    )
-                ]
-            )
+            guard let profileId = appState.currentUser?.id else {
+                await MainActor.run { isLoading = false }
+                return
+            }
             
-            await MainActor.run {
-                currentWorkout = mockWorkout
-                isLoading = false
-                insights = generateInsights(for: mockWorkout)
+            do {
+                // Get current plan and find today's workout
+                if let plan = try await appState.planService.getCurrentPlan(profileId: profileId) {
+                    let today = Date()
+                    let calendar = Calendar.current
+                    
+                    // Find today's workout across all phases
+                    for phase in plan.phases {
+                        if let todayWorkout = phase.dailyWorkouts.first(where: { workout in
+                            calendar.isDate(workout.workoutDate, inSameDayAs: today)
+                        }) {
+                            await MainActor.run {
+                                currentWorkout = todayWorkout
+                                isLoading = false
+                                insights = generateInsights(for: todayWorkout)
+                            }
+                            return
+                        }
+                    }
+                }
+                
+                // No workout found for today
+                await MainActor.run {
+                    currentWorkout = nil
+                    isLoading = false
+                    insights = []
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    // Keep current workout if loading fails
+                }
             }
         }
     }
@@ -191,7 +196,7 @@ struct MovementCard: View {
                 Text("Movement \(movement.sequence)")
                     .font(.headline)
                 
-                Text("Squat") // TODO: Get movement name from ID
+                Text("Movement \(movement.movementId)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 

@@ -31,10 +31,11 @@ struct BasicInfoView: View {
                 Text("Tell us about yourself")
                     .font(.title)
                     .fontWeight(.bold)
+                    .foregroundColor(.lightText)
                 
                 Text("This helps us personalize your experience")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.secondaryText)
                 
 
                 
@@ -42,16 +43,17 @@ struct BasicInfoView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Name")
                         .font(.headline)
+                        .foregroundColor(.lightText)
                     
                     HStack {
                         TextField("First Name", text: $viewModel.firstName)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .textFieldStyle(CustomTextFieldStyle())
                             .onChange(of: viewModel.firstName) { _, _ in
                                 // Data will be saved when user presses Next
                             }
                         
                         TextField("Last Name", text: $viewModel.lastName)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .textFieldStyle(CustomTextFieldStyle())
                             .onChange(of: viewModel.lastName) { _, _ in
                                 // Data will be saved when user presses Next
                             }
@@ -62,6 +64,7 @@ struct BasicInfoView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Date of Birth")
                         .font(.headline)
+                        .foregroundColor(.lightText)
                     
                     HStack(spacing: 12) {
                         // Day
@@ -204,6 +207,7 @@ struct BasicInfoView: View {
             }
             .padding()
         }
+        .background(Color.darkSpaceGrey)
         .onAppear {
             Task {
                 // Ensure Apple Sign-In data is populated when view appears
@@ -223,7 +227,8 @@ struct BasicInfoView: View {
     
     private func initializeDOBSelectors() {
         let calendar = Calendar.current
-        let comps = calendar.dateComponents([.day, .month, .year], from: viewModel.dateOfBirth)
+        let dateToUse = viewModel.dateOfBirth ?? Date() // Provide default date if nil
+        let comps = calendar.dateComponents([.day, .month, .year], from: dateToUse)
         selectedDay = comps.day ?? 1
         selectedMonth = comps.month ?? 1
         selectedYear = comps.year ?? currentYear

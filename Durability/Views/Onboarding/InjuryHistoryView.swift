@@ -3,7 +3,8 @@ import SwiftUI
 struct InjuryHistoryView: View {
     @ObservedObject var viewModel: OnboardingViewModel
     @EnvironmentObject var appState: AppState
-     @State private var injuries: [Injury] = []
+    @State private var injuries: [Injury] = []
+    @FocusState private var isTextFieldFocused: Bool
      
      var body: some View {
          ScrollView {
@@ -14,6 +15,12 @@ struct InjuryHistoryView: View {
                  
                  Toggle("I have injuries", isOn: $viewModel.hasInjuries)
                      .font(.headline)
+                     .onChange(of: viewModel.hasInjuries) { _, newValue in
+                         // Dismiss keyboard when toggle is turned off
+                         if !newValue {
+                             isTextFieldFocused = false
+                         }
+                     }
                  
                  if viewModel.hasInjuries {
                      Text("Select all that apply")
@@ -28,23 +35,35 @@ struct InjuryHistoryView: View {
                              ) {
                                  if viewModel.selectedInjuries.contains(injury.id) {
                                      viewModel.selectedInjuries.remove(injury.id)
+                                     // Clear other injury text if "Other" is deselected
+                                     if injury.id == 9 { // "Other" injury ID
+                                         viewModel.otherInjuryText = ""
+                                     }
                                  } else {
                                      viewModel.selectedInjuries.insert(injury.id)
+                                     // Focus text field if "Other" is selected
+                                     if injury.id == 9 { // "Other" injury ID
+                                         isTextFieldFocused = true
+                                     }
                                  }
                              }
                          }
                      }
                      
-                     VStack(alignment: .leading, spacing: 10) {
-                         Text("Other injuries")
-                             .font(.headline)
-                         
-                         TextField("Describe other injuries", text: $viewModel.otherInjuryText, axis: .vertical)
-                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                             .lineLimit(3...6)
-                             .onChange(of: viewModel.otherInjuryText) { _, _ in
-                                 // Data will be saved when user presses Next
-                             }
+                     // Show "Other injuries" text field only when "Other" is selected
+                     if viewModel.selectedInjuries.contains(9) { // "Other" injury ID
+                         VStack(alignment: .leading, spacing: 10) {
+                             Text("Describe your other injury")
+                                 .font(.headline)
+                             
+                             TextField("Describe other injuries", text: $viewModel.otherInjuryText, axis: .vertical)
+                                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                                 .lineLimit(3...6)
+                                 .focused($isTextFieldFocused)
+                                 .onChange(of: viewModel.otherInjuryText) { _, _ in
+                                     // Data will be saved when user presses Next
+                                 }
+                         }
                      }
                      
                      Text("Note: Always follow medical advice from licensed professionals")
@@ -63,6 +82,8 @@ struct InjuryHistoryView: View {
             Task {
                 await viewModel.loadExistingSelectionsForCurrentStep()
             }
+            // Ensure keyboard is dismissed when view appears
+            isTextFieldFocused = false
         }
      }
      
@@ -92,8 +113,9 @@ struct InjuryHistoryView: View {
              Injury(id: 6, name: "PCL"),
              Injury(id: 7, name: "Achilles"),
              Injury(id: 8, name: "UCL"),
-             Injury(id: 9, name: "Shoulder Labral Tear"),
-             Injury(id: 10, name: "Hip Labral Tear")
+             Injury(id: 9, name: "Other"),
+             Injury(id: 10, name: "Shoulder Labral Tear"),
+             Injury(id: 11, name: "Hip Labral Tear")
          ]
      }
  }

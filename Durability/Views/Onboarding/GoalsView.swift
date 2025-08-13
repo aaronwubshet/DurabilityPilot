@@ -22,16 +22,28 @@ struct GoalsView: View {
                      .font(.subheadline)
                      .foregroundColor(.secondary)
                  
-                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 1), spacing: 15) {
-                     ForEach(goals) { goal in
-                         GoalCard(
-                             goal: goal,
-                             isSelected: viewModel.selectedGoals.contains(goal.id)
-                         ) {
-                             if viewModel.selectedGoals.contains(goal.id) {
-                                 viewModel.selectedGoals.remove(goal.id)
-                             } else {
-                                 viewModel.selectedGoals.insert(goal.id)
+                 if viewModel.isLoading {
+                     VStack(spacing: 16) {
+                         ProgressView()
+                             .scaleEffect(1.2)
+                         Text("Saving your selections...")
+                             .font(.subheadline)
+                             .foregroundColor(.secondary)
+                     }
+                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                     .padding(.top, 50)
+                 } else {
+                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 1), spacing: 15) {
+                         ForEach(goals) { goal in
+                             GoalCard(
+                                 goal: goal,
+                                 isSelected: viewModel.selectedGoals.contains(goal.id)
+                             ) {
+                                 if viewModel.selectedGoals.contains(goal.id) {
+                                     viewModel.selectedGoals.remove(goal.id)
+                                 } else {
+                                     viewModel.selectedGoals.insert(goal.id)
+                                 }
                              }
                          }
                      }
@@ -40,14 +52,15 @@ struct GoalsView: View {
                  Spacer()
              }
              .padding()
-         }
-                 .onAppear {
+                 }
+        .onAppear {
             loadGoals()
             // Load existing user selections from database
             Task {
                 await viewModel.loadExistingSelectionsForCurrentStep()
             }
         }
+        .autoDismissKeyboard()
      }
      
      private func loadGoals() {

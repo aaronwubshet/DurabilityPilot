@@ -18,9 +18,9 @@ class AuthService: ObservableObject {
     init() {
         self.supabase = SupabaseManager.shared.client
         
-        // Check for an existing session when the service is created
+        // Always clear any existing session on app start
         Task {
-            await getCurrentSession()
+            await clearAllSessionData()
         }
     }
     
@@ -31,10 +31,8 @@ class AuthService: ObservableObject {
         do {
             let session = try await supabase.auth.signUp(email: email, password: password)
             self.user = session.user
-            print("AuthService: Successfully signed up user: \(session.user.email ?? "No Email")")
             return true
         } catch {
-            print("Error signing up: \(error.localizedDescription)")
             self.errorMessage = error.localizedDescription
             return false
         }
@@ -45,10 +43,8 @@ class AuthService: ObservableObject {
         do {
             let session = try await supabase.auth.signIn(email: email, password: password)
             self.user = session.user
-            print("AuthService: Successfully signed in user: \(session.user.email ?? "No Email")")
             return true
         } catch {
-            print("Error signing in: \(error.localizedDescription)")
             self.errorMessage = error.localizedDescription
             return false
         }
@@ -60,23 +56,15 @@ class AuthService: ObservableObject {
             try await supabase.auth.signOut()
             self.user = nil
             self.appleSignInData = nil
-            print("Successfully signed out.")
         } catch {
-            print("Error signing out: \(error.localizedDescription)")
             self.errorMessage = error.localizedDescription
         }
     }
     
     /// Checks for the current user session.
     private func getCurrentSession() async {
-        do {
-            let session = try await supabase.auth.session
-            self.user = session.user
-            print("Found existing session for user: \(session.user.email ?? "No Email")")
-        } catch {
-            // No active session found, which is normal.
-            self.user = nil
-        }
+        // Always return no session to force fresh sign-in
+        self.user = nil
     }
     
     // MARK: - Apple Sign In
@@ -84,21 +72,16 @@ class AuthService: ObservableObject {
     /// Restores a persisted session from Keychain if available.
     @discardableResult
     func restoreSession() async -> Bool {
-        do {
-            let session = try await supabase.auth.session
-            self.user = session.user
-            return true
-        } catch {
-            self.user = nil
-            return false
-        }
+        // Always return false to force fresh sign-in
+        self.user = nil
+        return false
     }
     
     /// Signs in with Apple and creates a basic profile
     func signInWithApple(idToken: String, nonce: String, fullName: String?, email: String?) async throws {
-        print("AuthService: Signing in with Apple...")
-        
         do {
+            print("🔍 AuthService: Starting Apple Sign-In...")
+            
             // Sign in with Supabase using OpenID Connect
             let response = try await supabase.auth.signInWithIdToken(
                 credentials: OpenIDConnectCredentials(
@@ -108,11 +91,13 @@ class AuthService: ObservableObject {
                 )
             )
             
+            print("✅ AuthService: Apple Sign-In successful")
+            print("   - User ID: \(response.user.id.uuidString)")
+            print("   - Email: \(response.user.email ?? "No email")")
+            
             // Store Apple Sign-In data for onboarding
             let firstName = fullName?.components(separatedBy: " ").first
             let lastName = fullName?.components(separatedBy: " ").dropFirst().joined(separator: " ")
-            
-            print("AuthService: Extracted name data - firstName: '\(firstName ?? "nil")', lastName: '\(lastName ?? "nil")'")
             
             self.appleSignInData = AppleSignInData(
                 firstName: firstName,
@@ -123,17 +108,14 @@ class AuthService: ObservableObject {
             // Update the user property
             self.user = response.user
             
-            print("AuthService: Successfully signed in with Apple")
-            print("AuthService: User ID: \(response.user.id)")
-            print("AuthService: User Email: \(response.user.email ?? "No Email")")
-            
             // Debug: Check session immediately after sign-in
             do {
                 let session = try await supabase.auth.session
-                print("AuthService: Session check - User ID: \(session.user.id)")
-                print("AuthService: Session check - Access Token: \(session.accessToken.prefix(20))...")
+                print("✅ AuthService: Session verified after sign-in")
+                print("   - Session user ID: \(session.user.id.uuidString)")
+                print("   - Access token exists: \(session.accessToken.isEmpty ? "No" : "Yes")")
             } catch {
-                print("AuthService: Session check failed: \(error)")
+                print("❌ AuthService: Session check failed after sign-in: \(error)")
             }
             
             // Create basic profile if we have name data
@@ -145,7 +127,7 @@ class AuthService: ObservableObject {
             }
             
         } catch {
-            print("AuthService: Apple Sign-In failed: \(error.localizedDescription)")
+            print("❌ AuthService: Apple Sign-In failed: \(error)")
             throw error
         }
     }
@@ -153,23 +135,53 @@ class AuthService: ObservableObject {
     /// Creates a basic profile in Supabase with Apple Sign-In data
     private func createBasicProfileFromAppleSignIn(appleData: AppleSignInData, userId: String) async {
         do {
-            print("AuthService: Creating basic profile...")
-            print("AuthService: Writing firstName: '\(appleData.firstName ?? "nil")', lastName: '\(appleData.lastName ?? "nil")' to database")
+            print("🔍 AuthService: Creating basic profile for user: \(userId)")
+            print("   - First name: \(appleData.firstName ?? "nil")")
+            print("   - Last name: \(appleData.lastName ?? "nil")")
             
-            // Use direct database write like in DatabaseTestView
+            // Use direct database write
+            struct ProfileInsertData: Codable {
+                let id: String
+                let firstName: String
+                let lastName: String
+                let isPilot: Bool
+                let onboardingCompleted: Bool
+                let assessmentCompleted: Bool
+                let createdAt: String
+                let updatedAt: String
+                
+                enum CodingKeys: String, CodingKey {
+                    case id
+                    case firstName = "first_name"
+                    case lastName = "last_name"
+                    case isPilot = "is_pilot"
+                    case onboardingCompleted = "onboarding_completed"
+                    case assessmentCompleted = "assessment_completed"
+                    case createdAt = "created_at"
+                    case updatedAt = "updated_at"
+                }
+            }
+            
+            let insertData = ProfileInsertData(
+                id: userId,
+                firstName: appleData.firstName ?? "",
+                lastName: appleData.lastName ?? "",
+                isPilot: false,
+                onboardingCompleted: false,
+                assessmentCompleted: false,
+                createdAt: ISO8601DateFormatter().string(from: Date()),
+                updatedAt: ISO8601DateFormatter().string(from: Date())
+            )
+            
             try await SupabaseManager.shared.client
                 .from("profiles")
-                .upsert([
-                    "id": userId,
-                    "first_name": appleData.firstName ?? "",
-                    "last_name": appleData.lastName ?? ""
-                ])
+                .upsert(insertData)
                 .execute()
             
-            print("AuthService: Basic profile created successfully")
+            print("✅ AuthService: Basic profile created successfully")
             
         } catch {
-            print("AuthService: Failed to create basic profile: \(error.localizedDescription)")
+            print("❌ AuthService: Failed to create basic profile: \(error)")
             // Don't throw here - profile creation failure shouldn't break sign-in
         }
     }
@@ -188,17 +200,25 @@ class AuthService: ObservableObject {
     func clearAllSessionData() async {
         do {
             try await supabase.auth.signOut()
-            self.user = nil
-            self.appleSignInData = nil
-            print("AuthService: Session data cleared")
         } catch {
-            print("AuthService: Error clearing session: \(error.localizedDescription)")
+            // Ignore errors - we want to clear regardless
         }
+        
+        // Always clear user data
+        self.user = nil
+        self.appleSignInData = nil
+        
+        // Clear any stored session data
+        UserDefaults.standard.removeObject(forKey: "supabase.auth.token")
+        UserDefaults.standard.removeObject(forKey: "supabase.auth.refreshToken")
+        UserDefaults.standard.removeObject(forKey: "supabase.auth.expiresAt")
+        UserDefaults.standard.removeObject(forKey: "supabase.auth.user")
     }
     
     /// Checks if there's an existing session
     func hasExistingSession() -> Bool {
-        return user != nil
+        // Always return false to force fresh sign-in
+        return false
     }
 }
 
@@ -216,10 +236,24 @@ class SupabaseManager {
     let client: SupabaseClient
     
     private init() {
+        // Initialize client with URL and key directly
         self.client = SupabaseClient(
             supabaseURL: Config.supabaseURL,
             supabaseKey: Config.supabaseAnonKey
         )
+    }
+    
+    /// Get a fresh client instance (useful for testing)
+    func getFreshClient() -> SupabaseClient {
+        return SupabaseClient(
+            supabaseURL: Config.supabaseURL,
+            supabaseKey: Config.supabaseAnonKey
+        )
+    }
+    
+    /// Check if the client is properly configured
+    func isConfigured() -> Bool {
+        return !Config.supabaseAnonKey.isEmpty && Config.supabaseURL.absoluteString != ""
     }
 }
 

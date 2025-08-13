@@ -78,8 +78,6 @@ struct SignUpView: View {
 
 
 #Preview {
-    // For the preview to work, we need a dummy AuthService
-    class MockAuthService: AuthService { }
-    return SignUpView(viewModel: AuthenticationViewModel(authService: MockAuthService()))
+    SignUpView(viewModel: AuthenticationViewModel(authService: AuthService()))
 }
 

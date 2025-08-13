@@ -47,14 +47,15 @@ struct SportsView: View {
                  Spacer()
              }
              .padding()
-         }
-                 .onAppear {
+                 }
+        .onAppear {
             loadSports()
             // Load existing user selections from database
             Task {
                 await viewModel.loadExistingSelectionsForCurrentStep()
             }
         }
+        .autoDismissKeyboard()
      }
      
      private func loadSports() {

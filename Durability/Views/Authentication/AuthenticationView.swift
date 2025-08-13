@@ -21,15 +21,16 @@ struct AuthenticationView: View {
                 // App Logo
                 Image(systemName: "shield.lefthalf.filled")
                     .font(.system(size: 80))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.electricGreen)
                 
                 Text("Welcome to Durability")
                     .font(.largeTitle)
                     .fontWeight(.bold)
+                    .foregroundColor(.lightText)
                 
                 Text("Sign in with Apple to continue")
                     .font(.headline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.secondaryText)
                 
                 Spacer()
                 
@@ -45,13 +46,37 @@ struct AuthenticationView: View {
                 } onCompletion: { result in
                     handleSignInWithAppleResult(result)
                 }
-                .signInWithAppleButtonStyle(.black)
+                .signInWithAppleButtonStyle(.white)
                 .frame(height: 50)
                 .cornerRadius(8)
+                
+                // Privacy Policy and Terms Agreement
+                VStack(spacing: 8) {
+                    Text("By continuing forward, you agree to Durability's")
+                        .font(.caption)
+                        .foregroundColor(.secondaryText)
+                        .multilineTextAlignment(.center)
+                    
+                    HStack(spacing: 4) {
+                        Link("Privacy Policy", destination: URL(string: "https://www.mydurability.ai/privacy-policy.html")!)
+                            .font(.caption)
+                            .foregroundColor(.electricGreen)
+                        
+                        Text("and")
+                            .font(.caption)
+                            .foregroundColor(.secondaryText)
+                        
+                        Link("Terms & Conditions", destination: URL(string: "https://www.mydurability.ai/terms.html")!)
+                            .font(.caption)
+                            .foregroundColor(.electricGreen)
+                    }
+                }
+                .padding(.horizontal)
                 
                 if viewModel.isLoading {
                     ProgressView("Signing in...")
                         .padding()
+                        .foregroundColor(.lightText)
                 }
                 
                 if let errorMessage = viewModel.errorMessage {
@@ -65,7 +90,9 @@ struct AuthenticationView: View {
                 Spacer()
             }
             .padding()
+            .background(Color.darkSpaceGrey)
         }
+        .background(Color.darkSpaceGrey)
     }
     
     // MARK: - Apple Sign-In Helper Methods

@@ -48,6 +48,7 @@ struct AssessmentInstructionsView: View {
                 .cornerRadius(15)
                 
                 Button(action: {
+                    print("🔍 AssessmentInstructionsView - Begin Recording button pressed")
                     viewModel.beginRecording()
                 }) {
                     HStack {

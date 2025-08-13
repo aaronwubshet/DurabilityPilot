@@ -5,27 +5,32 @@ struct MainTabView: View {
     @State private var selectedTab: Int = 1 // 0 = Plan, 1 = Today, 2 = Progress
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            PlanView()
-                .tabItem {
-                    Image(systemName: "calendar")
-                    Text("Plan")
-                }
-                .tag(0)
+        ZStack {
+            Color.darkSpaceGrey
+                .ignoresSafeArea()
             
-            TodayWorkoutView()
-                .tabItem {
-                    Image(systemName: "figure.walk")
-                    Text("Today")
-                }
-                .tag(1)
-            
-            ProgressDashboardView()
-                .tabItem {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                    Text("Progress")
-                }
-                .tag(2)
+            TabView(selection: $selectedTab) {
+                PlanView()
+                    .tabItem {
+                        Image(systemName: "calendar")
+                        Text("Plan")
+                    }
+                    .tag(0)
+                
+                TodayWorkoutView()
+                    .tabItem {
+                        Image(systemName: "figure.walk")
+                        Text("Today")
+                    }
+                    .tag(1)
+                
+                ProgressDashboardView()
+                    .tabItem {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                        Text("Progress")
+                    }
+                    .tag(2)
+            }
         }
     }
 }

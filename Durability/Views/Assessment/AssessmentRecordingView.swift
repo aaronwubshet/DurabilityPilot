@@ -12,10 +12,18 @@ struct AssessmentRecordingView: View {
                 .font(.largeTitle)
         }
         .onAppear {
+            print("🔍 AssessmentRecordingView.onAppear")
+            print("   - Setting isCameraPresented to true")
             viewModel.isCameraPresented = true
+        }
+        .onChange(of: viewModel.isCameraPresented) { _, newValue in
+            if newValue {
+                print("🔍 Camera sheet presented")
+            }
         }
         .sheet(isPresented: $viewModel.isCameraPresented) {
             CameraView(isPresented: $viewModel.isCameraPresented) { videoURL in
+                print("🔍 CameraView returned video URL: \(videoURL)")
                 viewModel.videoURL = videoURL
                 viewModel.stopRecording(appState: appState)
             }

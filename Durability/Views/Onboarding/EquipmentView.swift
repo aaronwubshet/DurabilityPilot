@@ -23,43 +23,45 @@ struct EquipmentView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding()
                 } else if !equipment.isEmpty {
-                    // Show "None" option prominently at the top
-                    if let noneEquipment = equipment.first(where: { $0.name.lowercased() == "none" }) {
-                        EquipmentCard(
-                            equipment: noneEquipment,
-                            isSelected: viewModel.selectedEquipment.contains(noneEquipment.id)
-                        ) {
-                            if viewModel.selectedEquipment.contains(noneEquipment.id) {
-                                viewModel.selectedEquipment.remove(noneEquipment.id)
-                            } else {
-                                // If selecting "None", clear all other selections
-                                viewModel.selectedEquipment.removeAll()
-                                viewModel.selectedEquipment.insert(noneEquipment.id)
-                            }
-                        }
-                        .padding(.bottom, 10)
-                    }
-                    
-                    // Show other equipment options
-                    let otherEquipment = equipment.filter { $0.name.lowercased() != "none" }
-                    if !otherEquipment.isEmpty {
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 15) {
-                            ForEach(otherEquipment) { item in
-                                EquipmentCard(
-                                    equipment: item,
-                                    isSelected: viewModel.selectedEquipment.contains(item.id)
-                                ) {
+                    // Show all equipment options in a grid, with "None" positioned correctly
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 15) {
+                        ForEach(equipment) { item in
+                            EquipmentCard(
+                                equipment: item,
+                                isSelected: viewModel.selectedEquipment.contains(item.id)
+                            ) {
+                                print("EquipmentView: Equipment card tapped - \(item.name) (ID: \(item.id))")
+                                print("EquipmentView: Current selections before: \(viewModel.selectedEquipment)")
+                                
+                                if item.name.lowercased() == "none" {
+                                    // Handle "None" selection
+                                    if viewModel.selectedEquipment.contains(item.id) {
+                                        viewModel.selectedEquipment.remove(item.id)
+                                        print("EquipmentView: Removed 'None' selection")
+                                    } else {
+                                        // If selecting "None", clear all other selections
+                                        viewModel.selectedEquipment.removeAll()
+                                        viewModel.selectedEquipment.insert(item.id)
+                                        print("EquipmentView: Selected 'None', cleared all other selections")
+                                    }
+                                } else {
+                                    // Handle other equipment selection
                                     // If selecting other equipment, remove "None" selection
                                     if let noneEquipment = equipment.first(where: { $0.name.lowercased() == "none" }) {
                                         viewModel.selectedEquipment.remove(noneEquipment.id)
+                                        print("EquipmentView: Removed 'None' selection when selecting other equipment")
                                     }
                                     
                                     if viewModel.selectedEquipment.contains(item.id) {
                                         viewModel.selectedEquipment.remove(item.id)
+                                        print("EquipmentView: Removed equipment selection: \(item.name)")
                                     } else {
                                         viewModel.selectedEquipment.insert(item.id)
+                                        print("EquipmentView: Added equipment selection: \(item.name)")
                                     }
                                 }
+                                
+                                print("EquipmentView: Current selections after: \(viewModel.selectedEquipment)")
                             }
                         }
                     }
@@ -88,6 +90,7 @@ struct EquipmentView: View {
                 await viewModel.loadExistingSelectionsForCurrentStep()
             }
         }
+        .autoDismissKeyboard()
     }
     
     private func loadEquipment() {

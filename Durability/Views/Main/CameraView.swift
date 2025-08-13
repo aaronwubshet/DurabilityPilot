@@ -29,7 +29,7 @@ struct CameraView: UIViewControllerRepresentable {
         }
         picker.videoQuality = .typeHigh
         picker.videoExportPreset = AVAssetExportPresetHighestQuality
-        picker.videoMaximumDuration = Config.maxAssessmentVideoDuration
+        picker.videoMaximumDuration = Config.maxAssessmentDuration
         picker.allowsEditing = false
         return picker
     }

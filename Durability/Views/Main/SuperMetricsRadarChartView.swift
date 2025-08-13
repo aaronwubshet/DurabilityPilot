@@ -69,9 +69,16 @@ struct SimpleMetricsChart: View {
 #Preview {
     SuperMetricsRadarChartView(
         results: AssessmentResult(
-            id: "", assessmentId: "", bodyArea: "Overall", durabilityScore: 0.75,
-            rangeOfMotionScore: 0.8, flexibilityScore: 0.6, functionalStrengthScore: 0.9,
-            mobilityScore: 0.7, aerobicCapacityScore: 0.85
+            id: 1,
+            assessmentId: 1, 
+            profileId: "test-profile-id",
+            bodyArea: "Overall", 
+            durabilityScore: 0.75,
+            rangeOfMotionScore: 0.8, 
+            flexibilityScore: 0.6, 
+            functionalStrengthScore: 0.9,
+            mobilityScore: 0.7, 
+            aerobicCapacityScore: 0.85
         )
     )
 }

@@ -23,8 +23,8 @@ class ProgressViewModel: ObservableObject {
                 self.assessmentHistory = history
 
                 // Get the latest assessment and its results
-                if let latestAssessment = history.first {
-                    let results = try await appState.assessmentService.getAssessmentResults(assessmentId: latestAssessment.id)
+                if let latestAssessment = history.first, let assessmentId = latestAssessment.assessmentId {
+                    let results = try await appState.assessmentService.getAssessmentResults(assessmentId: assessmentId)
                     // We need to find the "Overall" result to display
                     self.latestAssessmentResult = results.first(where: { $0.bodyArea == "Overall" })
                 }

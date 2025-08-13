@@ -9,6 +9,8 @@ class AppState: ObservableObject {
     @Published var onboardingCompleted = false
     @Published var assessmentCompleted = false
     @Published var currentPlan: Plan?
+    @Published var shouldShowAssessmentResults = false // New state to track when to show results
+    @Published var currentAssessmentResults: [AssessmentResult] = [] // Store assessment results
     
     // Profile caching for offline scenarios only
     @Published var profileCache: [String: UserProfile] = [:]
@@ -21,19 +23,17 @@ class AppState: ObservableObject {
     let assessmentService = AssessmentService()
     let planService = PlanService()
     let storageService = StorageService()
+    let networkService = NetworkService()
     
     init() {
         Task {
             isLoading = true
-            // Wait for session restoration to complete before proceeding
-            let sessionRestored = await authService.restoreSession()
-            if sessionRestored {
-                // Only check auth status if we have a session
-                await checkAuthenticationStatus()
-            } else {
-                // No session, user needs to sign in
-                isLoading = false
-            }
+            // Always start with no authentication - force fresh sign-in
+            isAuthenticated = false
+            currentUser = nil
+            onboardingCompleted = false
+            assessmentCompleted = false
+            isLoading = false
         }
     }
     
@@ -56,131 +56,90 @@ class AppState: ObservableObject {
         await checkAuthenticationStatus()
     }
     
-    // MARK: - Database-First Profile Loading
+    // MARK: - Database-First Profile Loading with Network Resilience
     
     /// Always check the database first for the source of truth
     private func loadUserProfileFromDatabase(userId: String) async {
-        do {
-            // 1. ALWAYS check database first - this is the source of truth
-            let profile = try await profileService.getProfile(userId: userId)
-            
-            // 2. Update app state based on database data
+        let result = await networkService.performWithRetry {
+            try await self.profileService.getProfile(userId: userId)
+        }
+        
+        switch result {
+        case .success(let profile):
+            // Update app state based on database data
             await MainActor.run {
-                currentUser = profile
-                onboardingCompleted = profile.onboardingCompleted
-                // Don't set assessmentCompleted here - let the assessment service determine it
+                self.currentUser = profile
+                self.onboardingCompleted = profile.onboardingCompleted
             }
             
-            // 3. Check assessment completion from database
+            // Check assessment completion from database
             await checkAssessmentCompletionFromDatabase(userId: userId)
             
-            // 4. Cache for offline scenarios only
-            profileCache[userId] = profile
+        case .failure(let error, let attempt, let maxAttempts):
+            ErrorHandler.logError(error, context: "AppState.loadUserProfileFromDatabase")
             
-            // 5. Update local persistence for offline fallback
-            saveProfileToLocal(profile, userId: userId)
+            // No local fallback - just set to not authenticated
+            await MainActor.run {
+                self.isAuthenticated = false
+                self.currentUser = nil
+                self.onboardingCompleted = false
+                self.assessmentCompleted = false
+            }
             
-
-            
-        } catch {
-
-            
-            // 6. Only fall back to local data if database is completely unavailable
-            if await isDatabaseUnavailable() {
-                await fallbackToLocalData(userId: userId)
-            } else {
-                // Database is available but profile doesn't exist - user needs to complete onboarding
-                await MainActor.run {
-                    currentUser = nil
-                    onboardingCompleted = false
-                    assessmentCompleted = false
-                }
-
+        case .noConnection:
+            // No local fallback - just set to not authenticated
+            await MainActor.run {
+                self.isAuthenticated = false
+                self.currentUser = nil
+                self.onboardingCompleted = false
+                self.assessmentCompleted = false
             }
         }
     }
     
-    /// Check if database is completely unavailable (offline scenario)
-    private func isDatabaseUnavailable() async -> Bool {
-        // For now, assume database is available
-        // In a production app, you might want to implement a more sophisticated connectivity check
-        return false
-    }
-    
-    /// Fallback to local data only when database is completely unavailable
-    private func fallbackToLocalData(userId: String) async {
-
-        
-        if let localProfile = loadLocalProfile(userId: userId) {
-            await MainActor.run {
-                currentUser = localProfile
-                onboardingCompleted = localProfile.onboardingCompleted
-                assessmentCompleted = localProfile.assessmentCompleted
-            }
-
-        } else {
-            await MainActor.run {
-                currentUser = nil
-                onboardingCompleted = false
-                assessmentCompleted = false
-            }
-
-        }
-    }
-    
-    // MARK: - Assessment State Management
+    // MARK: - Assessment State Management with Network Resilience
     
     /// Always check assessment completion from database first
     private func checkAssessmentCompletionFromDatabase(userId: String) async {
-        do {
-            let assessments = try await assessmentService.getAssessmentHistory(profileId: userId)
-            let isCompleted = !assessments.isEmpty
-            
+        let result = await networkService.performWithRetry {
+            try await self.profileService.getProfile(userId: userId)
+        }
+        
+        switch result {
+        case .success(let profile):
+            // Use the assessmentCompleted field from the database profile
             await MainActor.run {
-                assessmentCompleted = isCompleted
+                self.assessmentCompleted = profile.assessmentCompleted
             }
             
-            // Update local storage for offline fallback
-            UserDefaults.standard.set(isCompleted, forKey: "\(userId)_assessmentCompleted")
+        case .failure(let error, let attempt, let maxAttempts):
+            ErrorHandler.logError(error, context: "AppState.checkAssessmentCompletionFromDatabase")
             
-            print("AppState: Assessment completion status from database: \(isCompleted)")
-            
-        } catch {
-            print("AppState: Failed to check assessment completion from database: \(error)")
-            
-            // For now, just assume no assessment completed and continue
-            // This prevents the app from failing to load due to RLS policy issues
+            // No local fallback - just assume no assessment completed
             await MainActor.run {
-                assessmentCompleted = false
+                self.assessmentCompleted = false
             }
-            print("AppState: Assuming no assessment completed due to database access issue")
+            
+        case .noConnection:
+            await MainActor.run {
+                self.assessmentCompleted = false
+            }
         }
     }
     
     // MARK: - Local Data Management (Offline Fallback Only)
     
     private func loadLocalProfile(userId: String) -> UserProfile? {
-        let profileDataKey = "\(userId)_profileData"
-        
-        // Try to load cached profile data
-        if let profileData = userDefaults.data(forKey: profileDataKey),
-           let profile = try? JSONDecoder().decode(UserProfile.self, from: profileData) {
-            return profile
-        }
-        
+        // Always return nil - no local caching
         return nil
     }
     
     private func saveProfileToLocal(_ profile: UserProfile, userId: String) {
-        let profileDataKey = "\(userId)_profileData"
-        
-        // Save profile data for offline scenarios
-        if let profileData = try? JSONEncoder().encode(profile) {
-            userDefaults.set(profileData, forKey: profileDataKey)
-        }
-        
-        // Save assessment status for offline scenarios
-        userDefaults.set(profile.assessmentCompleted, forKey: "\(userId)_assessmentCompleted")
+        // Do nothing - no local persistence
+    }
+    
+    private func clearLocalProfileData(userId: String) {
+        // Do nothing - no local data to clear
     }
     
     // MARK: - Sign Out and Cleanup
@@ -191,12 +150,8 @@ class AppState: ObservableObject {
         currentUser = nil
         onboardingCompleted = false
         assessmentCompleted = false
+        shouldShowAssessmentResults = false
         currentPlan = nil
-        
-        // Clear cache for this user
-        if let userId = authService.user?.id.uuidString {
-            profileCache.removeValue(forKey: userId)
-        }
     }
     
     // MARK: - Utility Methods
@@ -205,17 +160,12 @@ class AppState: ObservableObject {
     func clearAllLocalData() {
         let domain = Bundle.main.bundleIdentifier ?? "ai.mydurability.Durability"
         userDefaults.removePersistentDomain(forName: domain)
-        profileCache.removeAll()
     }
     
     /// Force refresh profile from database (useful for testing)
     func forceRefreshProfile() async {
         guard let userId = authService.user?.id.uuidString else { return }
         
-        // Clear cache for this user
-        profileCache.removeValue(forKey: userId)
-        
-        // Reload from database
         await loadUserProfileFromDatabase(userId: userId)
     }
     
@@ -227,8 +177,6 @@ class AppState: ObservableObject {
     
     /// Clear all session data and force fresh sign-in
     func clearAllSessionData() async {
-        print("AppState: Clearing all session data and forcing fresh sign-in")
-        
         // Clear auth service session
         await authService.clearAllSessionData()
         
@@ -237,12 +185,11 @@ class AppState: ObservableObject {
         currentUser = nil
         onboardingCompleted = false
         assessmentCompleted = false
+        shouldShowAssessmentResults = false
         currentPlan = nil
         
         // Clear all local data
         clearAllLocalData()
-        
-        print("AppState: All session data cleared, user will need to sign in again")
     }
     
     /// Get current status for debugging
