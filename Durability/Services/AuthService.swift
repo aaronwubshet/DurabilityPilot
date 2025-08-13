@@ -17,9 +17,9 @@ class AuthService: ObservableObject {
     init() {
         self.supabase = SupabaseManager.shared.client
         
-        // Always clear any existing session on app start
+        // Check for existing session on app start
         Task {
-            await clearAllSessionData()
+            await getCurrentSession()
         }
     }
     
@@ -62,8 +62,13 @@ class AuthService: ObservableObject {
     
     /// Checks for the current user session.
     private func getCurrentSession() async {
-        // Always return no session to force fresh sign-in
-        self.user = nil
+        do {
+            let session = try await supabase.auth.session
+            self.user = session.user
+        } catch {
+            // No existing session
+            self.user = nil
+        }
     }
     
     // MARK: - Apple Sign In
@@ -71,16 +76,13 @@ class AuthService: ObservableObject {
     /// Restores a persisted session from Keychain if available.
     @discardableResult
     func restoreSession() async -> Bool {
-        // Always return false to force fresh sign-in
-        self.user = nil
-        return false
+        await getCurrentSession()
+        return user != nil
     }
     
     /// Signs in with Apple and creates a basic profile
     func signInWithApple(idToken: String, nonce: String, fullName: String?, email: String?) async throws {
         do {
-            print("🔍 AuthService: Starting Apple Sign-In...")
-            
             // Sign in with Supabase using OpenID Connect
             let response = try await supabase.auth.signInWithIdToken(
                 credentials: OpenIDConnectCredentials(
@@ -89,10 +91,6 @@ class AuthService: ObservableObject {
                     nonce: nonce
                 )
             )
-            
-            print("✅ AuthService: Apple Sign-In successful")
-            print("   - User ID: \(response.user.id.uuidString)")
-            print("   - Email: \(response.user.email ?? "No email")")
             
             // Store Apple Sign-In data for onboarding
             let firstName = fullName?.components(separatedBy: " ").first
@@ -107,16 +105,6 @@ class AuthService: ObservableObject {
             // Update the user property
             self.user = response.user
             
-            // Debug: Check session immediately after sign-in
-            do {
-                let session = try await supabase.auth.session
-                print("✅ AuthService: Session verified after sign-in")
-                print("   - Session user ID: \(session.user.id.uuidString)")
-                print("   - Access token exists: \(session.accessToken.isEmpty ? "No" : "Yes")")
-            } catch {
-                print("❌ AuthService: Session check failed after sign-in: \(error)")
-            }
-            
             // Create basic profile if we have name data
             if let fullName = fullName, !fullName.isEmpty {
                 await createBasicProfileFromAppleSignIn(
@@ -126,7 +114,6 @@ class AuthService: ObservableObject {
             }
             
         } catch {
-            print("❌ AuthService: Apple Sign-In failed: \(error)")
             throw error
         }
     }
@@ -134,10 +121,6 @@ class AuthService: ObservableObject {
     /// Creates a basic profile in Supabase with Apple Sign-In data
     private func createBasicProfileFromAppleSignIn(appleData: AppleSignInData, userId: String) async {
         do {
-            print("🔍 AuthService: Creating basic profile for user: \(userId)")
-            print("   - First name: \(appleData.firstName ?? "nil")")
-            print("   - Last name: \(appleData.lastName ?? "nil")")
-            
             // Use direct database write
             struct ProfileInsertData: Codable {
                 let id: String
@@ -177,10 +160,7 @@ class AuthService: ObservableObject {
                 .upsert(insertData)
                 .execute()
             
-            print("✅ AuthService: Basic profile created successfully")
-            
         } catch {
-            print("❌ AuthService: Failed to create basic profile: \(error)")
             // Don't throw here - profile creation failure shouldn't break sign-in
         }
     }
@@ -216,8 +196,7 @@ class AuthService: ObservableObject {
     
     /// Checks if there's an existing session
     func hasExistingSession() -> Bool {
-        // Always return false to force fresh sign-in
-        return false
+        return user != nil
     }
 }
 

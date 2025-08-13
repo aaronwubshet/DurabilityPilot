@@ -41,13 +41,6 @@ class OnboardingViewModel: ObservableObject {
         do {
             let existingProfile = try await appState.profileService.getProfile(userId: userId)
             
-            print("🔄 OnboardingViewModel: loadExistingProfileData - Loading from database:")
-            print("  - existingProfile.firstName: '\(existingProfile.firstName)'")
-            print("  - existingProfile.lastName: '\(existingProfile.lastName)'")
-            print("  - existingProfile.dateOfBirth: \(existingProfile.dateOfBirth?.description ?? "nil")")
-            print("  - existingProfile.sex: \(existingProfile.sex?.rawValue ?? "nil")")
-            print("  - existingProfile.age: \(existingProfile.age ?? -1)")
-            
             // Populate fields with existing data
             await MainActor.run {
                 firstName = existingProfile.firstName
@@ -55,16 +48,10 @@ class OnboardingViewModel: ObservableObject {
                 
                 if let dateOfBirth = existingProfile.dateOfBirth {
                     self.dateOfBirth = dateOfBirth
-                    print("✅ OnboardingViewModel: Set dateOfBirth to: \(dateOfBirth)")
-                } else {
-                    print("⚠️ OnboardingViewModel: No dateOfBirth in database")
                 }
                 
                 if let sex = existingProfile.sex {
                     self.sex = sex
-                    print("✅ OnboardingViewModel: Set sex to: \(sex.rawValue)")
-                } else {
-                    print("⚠️ OnboardingViewModel: No sex in database")
                 }
                 
                 if let heightCm = existingProfile.heightCm {
@@ -80,10 +67,7 @@ class OnboardingViewModel: ObservableObject {
                 }
             }
             
-            print("✅ OnboardingViewModel: Loaded existing profile data from database")
-            
         } catch {
-            print("❌ OnboardingViewModel: No existing profile found or error loading: \(error)")
             // This is normal for first-time users
         }
     }
@@ -134,7 +118,6 @@ class OnboardingViewModel: ObservableObject {
         case .basicInfo:
             // Always require user to review and confirm basic info, even if pre-populated
             let basicInfoValid = !firstName.isEmpty && !lastName.isEmpty && calculatedAge > 0
-            print("OnboardingViewModel: Basic info validation - firstName: \(firstName.isEmpty ? "empty" : "filled"), lastName: \(lastName.isEmpty ? "empty" : "filled"), age: \(calculatedAge), valid: \(basicInfoValid)")
             return basicInfoValid
         case .equipment:
             return true // Allow proceeding even if no equipment selected
@@ -145,12 +128,10 @@ class OnboardingViewModel: ObservableObject {
         case .sports:
             // Make sports selection optional for now
             let sportsValid = true // !selectedSports.isEmpty
-            print("OnboardingViewModel: Sports validation - selected: \(selectedSports.count), valid: \(sportsValid)")
             return sportsValid
         case .goals:
             // Make goals selection optional for now
             let goalsValid = true // !selectedGoals.isEmpty
-            print("OnboardingViewModel: Goals validation - selected: \(selectedGoals.count), valid: \(goalsValid)")
             return goalsValid
         case .healthKit:
             return true // Always can proceed
@@ -158,8 +139,6 @@ class OnboardingViewModel: ObservableObject {
     }
     
     func nextStep() async {
-        print("OnboardingViewModel: nextStep called from step: \(currentStep)")
-        
         // Dismiss keyboard when moving between steps
         dismissKeyboard()
         
@@ -169,14 +148,10 @@ class OnboardingViewModel: ObservableObject {
         }
         
         // Save current step's data before proceeding
-        print("OnboardingViewModel: Calling saveCurrentStepData...")
         await saveCurrentStepData()
-        print("OnboardingViewModel: saveCurrentStepData completed")
         
         if currentStep.rawValue < OnboardingStep.allCases.count - 1 {
-            let previousStep = currentStep
             currentStep = OnboardingStep(rawValue: currentStep.rawValue + 1)!
-            print("OnboardingViewModel: Moving from step \(previousStep) to step \(currentStep)")
             
             // Populate name fields when reaching basic info step
             if currentStep == .basicInfo {
@@ -200,33 +175,21 @@ class OnboardingViewModel: ObservableObject {
     }
     
     func completeOnboarding() async {
-        print("OnboardingViewModel: Starting completeOnboarding")
-        print("OnboardingViewModel: Current step: \(currentStep)")
-        print("OnboardingViewModel: Is last step: \(currentStep == OnboardingStep.allCases.last)")
-        
         // Add protection against accidental completion
         guard currentStep == OnboardingStep.allCases.last else {
-            print("OnboardingViewModel: ERROR - completeOnboarding called on non-final step: \(currentStep)")
             return
         }
         
         guard let appState = appState else {
-            print("OnboardingViewModel: ERROR - AppState not available")
             errorMessage = "App state not available"
             return
         }
         
-        print("OnboardingViewModel: AppState available")
-        print("OnboardingViewModel: Auth user: \(appState.authService.user?.id.uuidString ?? "nil")")
-        
         // Save current step data before completing onboarding
-        print("OnboardingViewModel: Saving current step data before completion...")
         await saveCurrentStepData()
-        print("OnboardingViewModel: Current step data saved")
         
         // Validate required fields first
         guard let userId = appState.authService.user?.id.uuidString, !userId.isEmpty else {
-            print("OnboardingViewModel: ERROR - User ID is missing")
             errorMessage = "User ID is missing"
             return
         }
@@ -241,33 +204,18 @@ class OnboardingViewModel: ObservableObject {
                     from: image.jpegData(compressionQuality: 0.8),
                     profileId: userId
                 )
-                print("OnboardingViewModel: Training plan image uploaded: \(imageURL ?? "nil")")
             } catch {
-                print("OnboardingViewModel: Failed to upload image: \(error)")
                 errorMessage = "Failed to upload image: \(error.localizedDescription)"
             }
         }
         
         guard !firstName.isEmpty, !lastName.isEmpty else {
-            print("OnboardingViewModel: ERROR - First name and last name are required")
             errorMessage = "First name and last name are required"
             return
         }
         
         let heightCm = convertHeightToCm()
         let weightLbs = Double(weight)
-        
-        print("Creating profile with validated data:")
-        print("- User ID: \(userId)")
-        print("- First Name: \(firstName)")
-        print("- Last Name: \(lastName)")
-        print("- Date of Birth: \(dateOfBirth ?? Date())")
-        print("- Age: \(calculatedAge)")
-        print("- Sex: \(sex?.rawValue ?? "nil")")
-        print("- Height (cm): \(heightCm ?? -1)")
-        print("- Weight (lbs): \(weightLbs ?? -1)")
-        print("- Selected Sports: \(selectedSports)")
-        print("- Selected Goals: \(selectedGoals)")
         
         // Create profile with weight in kg (converted from lbs)
         var profile = UserProfile(
@@ -293,49 +241,23 @@ class OnboardingViewModel: ObservableObject {
             profile.setWeightLbs(weightLbs)
         }
         
-        print("OnboardingViewModel: Created profile object:")
-        print("  - ID: \(profile.id)")
-        print("  - First Name: \(profile.firstName)")
-        print("  - Last Name: \(profile.lastName)")
-        print("  - Date of Birth: \(profile.dateOfBirth?.description ?? "nil")")
-        print("  - Age: \(profile.age?.description ?? "nil")")
-        print("  - Sex: \(profile.sex?.rawValue ?? "nil")")
-        print("  - Height (cm): \(profile.heightCm?.description ?? "nil")")
-        print("  - Weight (kg): \(profile.weightKg?.description ?? "nil")")
-        print("  - Training Plan Info: \(profile.trainingPlanInfo ?? "nil")")
-        print("  - Training Plan Image URL: \(profile.trainingPlanImageURL ?? "nil")")
-        print("  - Created At: \(profile.createdAt)")
-        print("  - Updated At: \(profile.updatedAt)")
-        
         do {
-            print("OnboardingViewModel: Attempting to create/update profile with ID: \(profile.id)")
-            print("OnboardingViewModel: Profile data: \(profile)")
-            
             // Try to update existing profile first, if it fails, create new one
             do {
                 try await appState.profileService.updateProfile(profile)
-                print("OnboardingViewModel: Profile updated successfully in database")
             } catch {
                 // If update fails (profile doesn't exist), create new one
-                print("OnboardingViewModel: Profile update failed, creating new profile: \(error)")
                 try await appState.profileService.createProfile(profile)
-                print("OnboardingViewModel: Profile created successfully in database")
             }
         } catch {
-            print("OnboardingViewModel: ERROR - Failed to create/update profile: \(error)")
-            print("OnboardingViewModel: Error details: \(error.localizedDescription)")
             errorMessage = "Failed to save profile: \(error.localizedDescription)"
             // Don't advance app state if profile creation failed
             return
         }
         
         // Only advance app state if profile was successfully created
-        print("OnboardingViewModel: Profile creation successful, advancing to assessment")
         await MainActor.run {
-            print("OnboardingViewModel: Before setting onboardingCompleted - current value: \(appState.onboardingCompleted)")
             appState.onboardingCompleted = true
-            print("OnboardingViewModel: After setting onboardingCompleted - new value: \(appState.onboardingCompleted)")
-            print("OnboardingViewModel: Current user: \(appState.currentUser?.id ?? "nil")")
             
             // Note: User selections are now saved immediately when made, so no need to save again here
         }

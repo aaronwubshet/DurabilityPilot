@@ -74,7 +74,6 @@ struct AssessmentResultsView: View {
                     if !appState.assessmentCompleted {
                         // First time completion - only show "Generate My Personalized Plan"
                         Button(action: {
-                            print("🔍 AssessmentResultsView - Generate Plan button pressed (first completion)")
                             viewModel.completeAssessment(appState: appState)
                         }) {
                             HStack {
@@ -91,14 +90,10 @@ struct AssessmentResultsView: View {
                     } else {
                         // Retake scenario - show "Start New Assessment" and "Go to Main App"
                         Button(action: {
-                            print("🔍 AssessmentResultsView - Start New Assessment button pressed (retake)")
-                            print("   - This will initiate a retake with full logging and database writes")
                             // Start a new assessment by resetting the view model state
                             viewModel.resetForNewAssessment()
                             // Clear the app state flag to allow normal assessment flow
                             appState.shouldShowAssessmentResults = false
-                            print("🔍 AssessmentResultsView - Set appState.shouldShowAssessmentResults to false")
-                            print("   - User will now go through the full assessment flow again")
                         }) {
                             HStack {
                                 Image(systemName: "arrow.clockwise")
@@ -113,7 +108,6 @@ struct AssessmentResultsView: View {
                         }
                         
                         Button(action: {
-                            print("🔍 AssessmentResultsView - Go to Main App button pressed (retake)")
                             // Mark assessment as completed and go to main app
                             Task {
                                 guard appState.authService.user?.id.uuidString != nil else { return }
@@ -159,10 +153,6 @@ struct AssessmentResultsView: View {
             .padding(.horizontal)
         }
         .onAppear {
-            print("🔍 AssessmentResultsView.onAppear")
-            print("   - assessmentResults count: \(assessmentResults.count)")
-            print("   - appState.shouldShowAssessmentResults: \(appState.shouldShowAssessmentResults)")
-            
             Task {
                 await summaryViewModel.loadUserData(userId: appState.authService.user?.id.uuidString ?? "")
             }

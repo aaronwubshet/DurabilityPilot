@@ -11,29 +11,18 @@ class AssessmentService: ObservableObject {
         profileId: String,
         videoURL: URL
     ) async throws -> Assessment {
-        print("🔍 AssessmentService.createAssessmentWithVideo() - Starting")
-        print("   - profileId: \(profileId)")
-        print("   - videoURL: \(videoURL)")
-        print("   - This creates a new assessment record (works for both initial and retake)")
-        
         // Debug: Check current session before database operation
         do {
-            let session = try await self.supabase.auth.session
-            print("✅ AssessmentService: Session verified before database operation")
-            print("   - Session user ID: \(session.user.id.uuidString)")
-            print("   - Profile ID matches session: \(session.user.id.uuidString == profileId)")
+            _ = try await self.supabase.auth.session
         } catch {
-            print("❌ AssessmentService: No valid session found: \(error)")
             throw AssessmentError.failedToCreate
         }
         
         // Upload video to private bucket first
-        print("🔍 Uploading video to private bucket...")
         let videoFilePath = try await uploadVideoToPrivateBucket(
             videoURL: videoURL,
             profileId: profileId
         )
-        print("✅ Video uploaded successfully to: \(videoFilePath)")
         
         // Create assessment record with video URL (don't provide assessment_id - let DB generate it)
         let assessment = Assessment(
@@ -43,13 +32,7 @@ class AssessmentService: ObservableObject {
             createdAt: Date()
         )
         
-        print("🔍 Created assessment object:")
-        print("   - assessmentId: \(assessment.assessmentId?.description ?? "nil")")
-        print("   - profileId: \(assessment.profileId)")
-        print("   - videoURL: \(assessment.videoURL?.description ?? "nil")")
-        
         // Insert assessment record - let database generate the assessment_id
-        print("🔍 Writing to assessments table in Supabase...")
         
         let result = await networkService.performWithRetry(
             operation: {
@@ -71,12 +54,8 @@ class AssessmentService: ObservableObject {
         
         switch result {
         case .success(let createdAssessment):
-            print("✅ Successfully created assessment with ID: \(createdAssessment.assessmentId ?? -1)")
-            print("   - Generated assessmentId: \(createdAssessment.assessmentId?.description ?? "nil")")
-            print("   - Generated assessmentId type: \(type(of: createdAssessment.assessmentId))")
             return createdAssessment
         case .failure(let error, _, _):
-            print("❌ Failed to create assessment record: \(error)")
             throw error
         case .noConnection:
             throw AssessmentError.failedToCreate
@@ -85,23 +64,12 @@ class AssessmentService: ObservableObject {
     
     /// Creates an assessment record without video
     func createAssessmentWithoutVideo(profileId: String) async throws -> Assessment {
-        print("🔍 AssessmentService.createAssessmentWithoutVideo() - Starting")
-        print("   - profileId: \(profileId)")
-        print("   - This creates a new assessment record (works for both initial and retake)")
-        
         let assessment = Assessment(
             assessmentId: nil, // Let database auto-generate this
             profileId: profileId,
             videoURL: nil,
             createdAt: Date()
         )
-        
-        print("🔍 Created assessment object:")
-        print("   - assessmentId: \(assessment.assessmentId?.description ?? "nil")")
-        print("   - profileId: \(assessment.profileId)")
-        print("   - videoURL: \(assessment.videoURL?.description ?? "nil")")
-        
-        print("🔍 Writing to assessments table in Supabase...")
         
         let result = await networkService.performWithRetry(
             operation: {
@@ -123,12 +91,8 @@ class AssessmentService: ObservableObject {
         
         switch result {
         case .success(let createdAssessment):
-            print("✅ Successfully created assessment with ID: \(createdAssessment.assessmentId ?? -1)")
-            print("   - Generated assessmentId: \(createdAssessment.assessmentId?.description ?? "nil")")
-            print("   - Generated assessmentId type: \(type(of: createdAssessment.assessmentId))")
             return createdAssessment
         case .failure(let error, _, _):
-            print("❌ Failed to create assessment record: \(error)")
             throw error
         case .noConnection:
             throw AssessmentError.failedToCreate
@@ -200,58 +164,10 @@ class AssessmentService: ObservableObject {
         assessmentId: Int,
         results: [AssessmentResult]
     ) async throws {
-        print("🔍 AssessmentService.createAssessmentResults() - Starting")
-        print("   - assessmentId: \(assessmentId)")
-        print("   - results count: \(results.count)")
-        print("   - assessmentId type: \(type(of: assessmentId))")
-        print("   - This creates new assessment results (works for both initial and retake)")
-        
-        // Debug: Print the exact data being sent
-        print("🔍 Data being sent to assessment_results table:")
-        for (index, result) in results.enumerated() {
-            print("   Result \(index + 1):")
-            print("     - assessment_id: \(result.assessmentId) (type: \(type(of: result.assessmentId)))")
-            print("     - profile_id: \(result.profileId) (type: \(type(of: result.profileId)))")
-            print("     - body_area: \(result.bodyArea) (type: \(type(of: result.bodyArea)))")
-            print("     - durability_score: \(result.durabilityScore) (type: \(type(of: result.durabilityScore)))")
-            print("     - flexibility_score: \(result.flexibilityScore) (type: \(type(of: result.flexibilityScore)))")
-            print("     - functional_strength_score: \(result.functionalStrengthScore) (type: \(type(of: result.functionalStrengthScore)))")
-            print("     - mobility_score: \(result.mobilityScore) (type: \(type(of: result.mobilityScore)))")
-            print("     - range_of_motion_score: \(result.rangeOfMotionScore) (type: \(type(of: result.rangeOfMotionScore)))")
-            print("     - aerobic_capacity_score: \(result.aerobicCapacityScore) (type: \(type(of: result.aerobicCapacityScore)))")
-        }
-        
         // Insert all assessment results
-        print("🔍 Writing to assessment_results table in Supabase...")
         
         let result = await networkService.performWithRetry(
             operation: {
-                print("🔍 Using authenticated user session...")
-                
-                // Debug: Check current user session
-                if let user = try? await self.supabase.auth.session.user {
-                    print("   - Current user ID: \(user.id)")
-                    print("   - User email: \(user.email ?? "no email")")
-                } else {
-                    print("   ❌ No authenticated user found!")
-                }
-                
-                // Debug: Check if we can access the assessment_results table
-                print("🔍 Testing table access...")
-                do {
-                    let testQuery: [AssessmentResult] = try await self.supabase
-                        .from("assessment_results")
-                        .select("*")
-                        .limit(1)
-                        .execute()
-                        .value
-                    print("   ✅ Can access assessment_results table, found \(testQuery.count) existing records")
-                } catch {
-                    print("   ❌ Cannot access assessment_results table: \(error)")
-                }
-                
-                // Insert all results at once
-                print("🔍 Inserting all \(results.count) results...")
                 try await self.supabase
                     .from("assessment_results")
                     .insert(results)
@@ -262,18 +178,10 @@ class AssessmentService: ObservableObject {
         
         switch result {
         case .success:
-            print("✅ Successfully wrote \(results.count) results to assessment_results table")
+            break
         case .failure(let error, _, _):
-            print("❌ Failed to create assessment results: \(error)")
-            print("❌ Error type: \(type(of: error))")
-            print("❌ Error details: \(error.localizedDescription)")
-            if let postgrestError = error as? PostgrestError {
-                print("❌ PostgrestError code: \(postgrestError.code ?? "nil")")
-                print("❌ PostgrestError message: \(postgrestError.message)")
-            }
             throw error
         case .noConnection:
-            print("❌ No network connection available")
             throw AssessmentError.failedToCreate
         }
     }

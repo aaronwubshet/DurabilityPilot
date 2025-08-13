@@ -7,6 +7,7 @@ class ProgressViewModel: ObservableObject {
     @Published var assessmentHistory: [Assessment] = []
     @Published var latestAssessmentResult: AssessmentResult?
     @Published var assessmentResultsHistory: [AssessmentResult] = []
+    @Published var workoutCompletions: [WorkoutCompletion] = []
     @Published var errorMessage: String?
 
     func loadProgressData(appState: AppState) {
@@ -42,12 +43,86 @@ class ProgressViewModel: ObservableObject {
                     self.latestAssessmentResult = results.first(where: { $0.bodyArea == "Overall" })
                 }
                 
+                // Load workout completion data
+                await loadWorkoutCompletions(appState: appState)
+                
                 self.isLoading = false
             } catch {
                 self.errorMessage = "Failed to load progress data: \(error.localizedDescription)"
                 self.isLoading = false
             }
         }
+    }
+    
+    // MARK: - Workout Completion Methods
+    
+    private func loadWorkoutCompletions(appState: AppState) async {
+        // For now, we'll generate sample data
+        // In a real app, this would come from a workout tracking service
+        let calendar = Calendar.current
+        let now = Date()
+        let startDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        
+        var sampleCompletions: [WorkoutCompletion] = []
+        
+        // Generate sample data for the past month
+        for dayOffset in 0..<30 {
+            if let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) {
+                let shouldHaveWorkout = Bool.random() // 50% chance of having a workout
+                if shouldHaveWorkout {
+                    let intensity = WorkoutCompletion.WorkoutIntensity.allCases.randomElement() ?? .medium
+                    let completion = WorkoutCompletion(
+                        date: date,
+                        completed: Bool.random(), // 80% chance of completion
+                        workoutType: ["Strength", "Cardio", "Flexibility", "Balance"].randomElement(),
+                        duration: TimeInterval.random(in: 1800...7200), // 30-120 minutes
+                        intensity: intensity
+                    )
+                    sampleCompletions.append(completion)
+                }
+            }
+        }
+        
+        self.workoutCompletions = sampleCompletions
+    }
+    
+    func getDailyWorkoutStatus(for date: Date) -> DailyWorkoutStatus {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        
+        let dayCompletions = workoutCompletions.filter { completion in
+            completion.date >= startOfDay && completion.date < endOfDay
+        }
+        
+        let hasWorkout = !dayCompletions.isEmpty
+        let completedWorkouts = dayCompletions.filter { $0.completed }
+        let completionPercentage = hasWorkout ? Double(completedWorkouts.count) / Double(dayCompletions.count) : 0.0
+        let workoutTypes = dayCompletions.compactMap { $0.workoutType }
+        
+        return DailyWorkoutStatus(
+            date: date,
+            hasWorkout: hasWorkout,
+            completionPercentage: completionPercentage,
+            workoutTypes: workoutTypes
+        )
+    }
+    
+    func getMonthlyWorkoutData(for date: Date) -> [DailyWorkoutStatus] {
+        let calendar = Calendar.current
+        let startOfMonth = calendar.dateInterval(of: .month, for: date)?.start ?? date
+        let daysInMonth = calendar.range(of: .day, in: .month, for: date)?.count ?? 30
+        
+        var monthlyData: [DailyWorkoutStatus] = []
+        
+        for day in 0..<daysInMonth {
+            if let dayDate = calendar.date(byAdding: .day, value: day, to: startOfMonth) {
+                let status = getDailyWorkoutStatus(for: dayDate)
+                monthlyData.append(status)
+            }
+        }
+        
+        return monthlyData
     }
     
     // Get chart data for a specific time period

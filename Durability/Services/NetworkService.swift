@@ -81,10 +81,7 @@ extension NetworkService {
         operationName: String = "Database Operation"
     ) async -> NetworkResult<T> {
         
-        print("🔍 [\(operationName)] Starting operation...")
-        
-        guard isConnected else {
-            print("❌ [\(operationName)] No network connection")
+                guard isConnected else {
             return .noConnection
         }
         
@@ -92,29 +89,18 @@ extension NetworkService {
         
         for attempt in 1...config.maxAttempts {
             do {
-                print("🔄 [\(operationName)] Attempt \(attempt)/\(config.maxAttempts)")
                 let result = try await operation()
-                print("✅ [\(operationName)] Success on attempt \(attempt)")
                 return .success(result)
             } catch {
                 lastError = error
-                print("❌ [\(operationName)] Attempt \(attempt) failed: \(error.localizedDescription)")
-                
-                // Log specific error details
-                if let supabaseError = error as? PostgrestError {
-                    print("   📊 Supabase Error Code: \(supabaseError.code)")
-                    print("   📊 Supabase Error Message: \(supabaseError.message)")
-                }
                 
                 // Don't retry on certain errors
                 if !shouldRetry(error) {
-                    print("🛑 [\(operationName)] Not retrying - error is not recoverable")
                     return .failure(error, attempt: attempt, maxAttempts: config.maxAttempts)
                 }
                 
                 // If this is the last attempt, return failure
                 if attempt == config.maxAttempts {
-                    print("🛑 [\(operationName)] All attempts exhausted")
                     return .failure(error, attempt: attempt, maxAttempts: config.maxAttempts)
                 }
                 
@@ -123,8 +109,6 @@ extension NetworkService {
                     config.baseDelay * pow(config.backoffMultiplier, Double(attempt - 1)),
                     config.maxDelay
                 )
-                
-                print("⏳ [\(operationName)] Waiting \(String(format: "%.1f", delay))s before retry...")
                 
                 // Wait before retrying
                 try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))

@@ -28,11 +28,17 @@ class AppState: ObservableObject {
     init() {
         Task {
             isLoading = true
-            // Always start with no authentication - force fresh sign-in
-            isAuthenticated = false
-            currentUser = nil
-            onboardingCompleted = false
-            assessmentCompleted = false
+            // Check if user is already authenticated
+            if let user = authService.user {
+                isAuthenticated = true
+                await loadUserProfileFromDatabase(userId: user.id.uuidString)
+            } else {
+                // No authenticated user - start fresh
+                isAuthenticated = false
+                currentUser = nil
+                onboardingCompleted = false
+                assessmentCompleted = false
+            }
             isLoading = false
         }
     }

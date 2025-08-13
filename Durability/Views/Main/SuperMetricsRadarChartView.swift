@@ -50,13 +50,27 @@ struct RadarChartView: View {
                 // Radar lines (spokes)
                 RadarLines(numberOfPoints: numberOfPoints, center: center, chartRadius: chartRadius)
                 
-                // Data polygon
+                // Data polygon with gradient fill
                 if data.count == numberOfPoints {
                     RadarPolygon(data: data, center: center, radius: chartRadius)
-                        .fill(Color.electricGreen.opacity(0.3))
+                        .fill(
+                            LinearGradient(
+                                colors: [.red, .orange, .yellow, .green],
+                                startPoint: .bottomLeading,
+                                endPoint: .topTrailing
+                            )
+                            .opacity(0.3)
+                        )
                         .overlay(
                             RadarPolygon(data: data, center: center, radius: chartRadius)
-                                .stroke(Color.electricGreen, lineWidth: 2)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.red, .orange, .yellow, .green],
+                                        startPoint: .bottomLeading,
+                                        endPoint: .topTrailing
+                                    ),
+                                    style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)
+                                )
                         )
                 }
                 
@@ -152,9 +166,18 @@ struct DataPoint: View {
         let pointPosition = calculatePointPosition()
         
         Circle()
-            .fill(Color.electricGreen)
+            .fill(scoreColor(value))
             .frame(width: 6, height: 6)
             .position(pointPosition)
+    }
+    
+    private func scoreColor(_ score: Double) -> Color {
+        switch score {
+        case 0.8...: return .green
+        case 0.6..<0.8: return .yellow
+        case 0.4..<0.6: return .orange
+        default: return .red
+        }
     }
     
     private func calculatePointPosition() -> CGPoint {
@@ -208,11 +231,11 @@ struct MetricsListView: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            RadarMetricRow(name: "Range of Motion", score: results.rangeOfMotionScore, color: .electricGreen)
-            RadarMetricRow(name: "Flexibility", score: results.flexibilityScore, color: .electricGreen)
-            RadarMetricRow(name: "Mobility", score: results.mobilityScore, color: .electricGreen)
-            RadarMetricRow(name: "Functional Strength", score: results.functionalStrengthScore, color: .orange)
-            RadarMetricRow(name: "Aerobic Capacity", score: results.aerobicCapacityScore, color: .yellow)
+            RadarMetricRow(name: "Range of Motion", score: results.rangeOfMotionScore)
+            RadarMetricRow(name: "Flexibility", score: results.flexibilityScore)
+            RadarMetricRow(name: "Mobility", score: results.mobilityScore)
+            RadarMetricRow(name: "Functional Strength", score: results.functionalStrengthScore)
+            RadarMetricRow(name: "Aerobic Capacity", score: results.aerobicCapacityScore)
         }
     }
 }
@@ -220,12 +243,11 @@ struct MetricsListView: View {
 struct RadarMetricRow: View {
     let name: String
     let score: Double
-    let color: Color
     
     var body: some View {
         HStack {
             Circle()
-                .fill(color)
+                .fill(scoreColor(score))
                 .frame(width: 8, height: 8)
             
             Text(name)
@@ -237,7 +259,16 @@ struct RadarMetricRow: View {
             Text("\(Int(score * 100))%")
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundColor(color)
+                .foregroundColor(scoreColor(score))
+        }
+    }
+    
+    private func scoreColor(_ score: Double) -> Color {
+        switch score {
+        case 0.8...: return .green
+        case 0.6..<0.8: return .yellow
+        case 0.4..<0.6: return .orange
+        default: return .red
         }
     }
 }

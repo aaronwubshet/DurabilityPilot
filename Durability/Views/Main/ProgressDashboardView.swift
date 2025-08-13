@@ -20,6 +20,9 @@ struct ProgressDashboardView: View {
                             // Durability Score Card
                             DurabilityScoreCard(score: latestResult.durabilityScore)
                             
+                            // Workout Completion Calendar
+                            WorkoutCompletionCalendarView(viewModel: viewModel)
+                            
                             // Super Metrics Card
                             ProgressSuperMetricsCard(
                                 results: viewModel.latestAssessmentResult,
@@ -36,6 +39,9 @@ struct ProgressDashboardView: View {
                             // Recent Assessments Card
                             RecentAssessmentsCard(assessmentHistory: viewModel.assessmentHistory)
                             
+                            // Analytics Button
+                            AnalyticsButton()
+                            
                         } else {
                             EmptyStateView()
                         }
@@ -50,7 +56,9 @@ struct ProgressDashboardView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
                         Button("Re-Assess") {
-                            // TODO: Navigate to assessment flow
+                            Task {
+                                await resetForRetake()
+                            }
                         }
                         .foregroundColor(.electricGreen)
                         .font(.subheadline)
@@ -65,6 +73,35 @@ struct ProgressDashboardView: View {
             }
             .onAppear {
                 viewModel.loadProgressData(appState: appState)
+            }
+        }
+    }
+    
+    /// Reset app state to allow a fresh assessment retake
+    private func resetForRetake() async {
+        // Reset assessment completion status
+        await MainActor.run {
+            appState.assessmentCompleted = false
+            appState.shouldShowAssessmentResults = false
+            appState.currentAssessmentResults = []
+        }
+        
+        // Update the user profile in the database to mark assessment as not completed
+        if appState.authService.user?.id != nil {
+            do {
+                var updatedProfile = appState.currentUser
+                updatedProfile?.assessmentCompleted = false
+                updatedProfile?.updatedAt = Date()
+                
+                if let profile = updatedProfile {
+                    try await appState.profileService.updateProfile(profile)
+                    
+                    await MainActor.run {
+                        appState.currentUser = profile
+                    }
+                }
+            } catch {
+                // Handle error silently
             }
         }
     }
@@ -183,7 +220,6 @@ struct ProgressSuperMetricsCard: View {
 }
 
 struct ProgressHistoryCard: View {
-    @Binding var selectedTimePeriod: TimePeriod
     let assessmentHistory: [Assessment]
     let assessmentResultsHistory: [AssessmentResult]
     
@@ -197,19 +233,11 @@ struct ProgressHistoryCard: View {
                 
                 Spacer()
                 
-                // Time period selector
-                HStack(spacing: 8) {
-                    ForEach(TimePeriod.allCases, id: \.self) { period in
-                        Button(period.displayName) {
-                            selectedTimePeriod = period
-                        }
+                // Show data range info
+                if !assessmentResultsHistory.isEmpty {
+                    Text(dataRangeText)
                         .font(.caption)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(selectedTimePeriod == period ? Color.electricGreen : Color.clear)
-                        .foregroundColor(selectedTimePeriod == period ? .darkSpaceGrey : .secondaryText)
-                        .cornerRadius(8)
-                    }
+                        .foregroundColor(.secondaryText)
                 }
             }
             
@@ -240,11 +268,8 @@ struct ProgressHistoryCard: View {
                                 .foregroundColor(.secondaryText)
                         )
                 } else {
-                    LineChartView(
-                        data: getChartData(),
-                        selectedTimePeriod: selectedTimePeriod
-                    )
-                    .frame(height: 120)
+                    LineChartView(data: getChartData())
+                        .frame(height: 120)
                 }
             }
         }
@@ -253,39 +278,63 @@ struct ProgressHistoryCard: View {
         .cornerRadius(16)
     }
     
+    private var dataRangeText: String {
+        let chartData = getChartData()
+        guard !chartData.isEmpty else { return "" }
+        
+        let calendar = Calendar.current
+        let firstDate = chartData.first?.date ?? Date()
+        let lastDate = chartData.last?.date ?? Date()
+        
+        let daysBetween = calendar.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
+        
+        if daysBetween == 0 {
+            return "Today"
+        } else if daysBetween <= 7 {
+            return "Last \(daysBetween + 1) days"
+        } else {
+            return "Last 7 days"
+        }
+    }
+    
     private func getChartData() -> [ChartDataPoint] {
         let calendar = Calendar.current
         let now = Date()
         
-        // Filter assessments based on time period
-        let filteredResults = assessmentResultsHistory.filter { result in
+        // Create data points with dates
+        var dataPoints: [ChartDataPoint] = []
+        
+        for result in assessmentResultsHistory {
             guard let assessment = assessmentHistory.first(where: { $0.assessmentId == result.assessmentId }) else {
-                return false
+                continue
             }
             
-            let daysSinceAssessment = calendar.dateComponents([.day], from: assessment.createdAt, to: now).day ?? 0
-            
-            switch selectedTimePeriod {
-            case .week:
-                return daysSinceAssessment <= 7
-            case .month:
-                return daysSinceAssessment <= 30
-            case .quarter:
-                return daysSinceAssessment <= 90
-            case .year:
-                return daysSinceAssessment <= 365
-            }
+            let dataPoint = ChartDataPoint(
+                x: 0, // Will be calculated based on date
+                y: result.durabilityScore * 100, // Convert to percentage
+                date: assessment.createdAt,
+                label: "Assessment \(String(assessment.assessmentId ?? 0).prefix(8))"
+            )
+            dataPoints.append(dataPoint)
         }
         
-        // Convert to chart data points
-        return filteredResults.enumerated().map { index, result in
-            ChartDataPoint(
-                x: Double(index),
-                y: result.durabilityScore * 100, // Convert to percentage
-                date: assessmentHistory.first(where: { $0.assessmentId == result.assessmentId })?.createdAt ?? Date(),
-                label: "Assessment \(index + 1)"
-            )
-        }.sorted { $0.date < $1.date }
+        // Sort by date (newest first)
+        dataPoints.sort { $0.date > $1.date }
+        
+        // If we have more than 7 days of data, only show the last 7 days
+        if dataPoints.count > 7 {
+            dataPoints = Array(dataPoints.prefix(7))
+        }
+        
+        // Reverse to show oldest to newest (left to right)
+        dataPoints.reverse()
+        
+        // Calculate x-axis positions based on actual dates
+        for (index, dataPoint) in dataPoints.enumerated() {
+            dataPoints[index].x = Double(index)
+        }
+        
+        return dataPoints
     }
 }
 
@@ -365,7 +414,6 @@ enum TimePeriod: CaseIterable {
 // MARK: - Line Chart View
 struct LineChartView: View {
     let data: [ChartDataPoint]
-    let selectedTimePeriod: TimePeriod
     
     var body: some View {
         GeometryReader { geometry in
@@ -476,6 +524,212 @@ struct ChartPoints: View {
                 .frame(width: 6, height: 6)
                 .position(x: x, y: y)
         }
+    }
+}
+
+// MARK: - Analytics Button
+struct AnalyticsButton: View {
+    var body: some View {
+        NavigationLink(destination: AnalyticsView()) {
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color.electricGreen)
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: "chart.bar.doc.horizontal")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+                
+                // Text
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("View Analytics")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                    
+                    Text("Detailed insights and metrics")
+                        .font(.caption)
+                        .foregroundColor(.secondaryText)
+                }
+                
+                Spacer()
+                
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondaryText)
+            }
+            .padding(20)
+            .background(Color.lightSpaceGrey)
+            .cornerRadius(16)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Workout Completion Calendar View
+struct WorkoutCompletionCalendarView: View {
+    @ObservedObject var viewModel: ProgressViewModel
+    @State private var selectedMonth = Date()
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Workout Completion")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.lightText)
+                    
+                    Text("Track your daily workout progress")
+                        .font(.caption)
+                        .foregroundColor(.secondaryText)
+                }
+                
+                Spacer()
+                
+                // Month navigation
+                HStack(spacing: 12) {
+                    Button(action: previousMonth) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.electricGreen)
+                    }
+                    
+                    Text(monthYearString)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.lightText)
+                    
+                    Button(action: nextMonth) {
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.electricGreen)
+                    }
+                }
+            }
+            
+            // Calendar grid
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
+                // Day headers
+                ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
+                    Text(day)
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondaryText)
+                        .frame(height: 24)
+                }
+                
+                // Calendar days
+                ForEach(calendarDays, id: \.self) { date in
+                    if let date = date {
+                        WorkoutDayView(
+                            date: date,
+                            status: viewModel.getDailyWorkoutStatus(for: date),
+                            isCurrentMonth: Calendar.current.isDate(date, equalTo: selectedMonth, toGranularity: .month)
+                        )
+                    } else {
+                        Color.clear
+                            .frame(height: 32)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .background(Color.lightSpaceGrey)
+        .cornerRadius(16)
+    }
+    
+    private var monthYearString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: selectedMonth)
+    }
+    
+    private var calendarDays: [Date?] {
+        let calendar = Calendar.current
+        let startOfMonth = calendar.dateInterval(of: .month, for: selectedMonth)?.start ?? selectedMonth
+        
+        // Get the first day of the month and the day of week it falls on
+        let firstWeekday = calendar.component(.weekday, from: startOfMonth)
+        let offsetDays = firstWeekday - 1 // Adjust for Sunday = 1
+        
+        // Get the number of days in the month
+        let daysInMonth = calendar.range(of: .day, in: .month, for: selectedMonth)?.count ?? 30
+        
+        var days: [Date?] = []
+        
+        // Add empty cells for days before the first of the month
+        for _ in 0..<offsetDays {
+            days.append(nil)
+        }
+        
+        // Add all days of the month
+        for day in 1...daysInMonth {
+            if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) {
+                days.append(date)
+            }
+        }
+        
+        // Pad to complete the last week if necessary
+        let remainingCells = 7 - (days.count % 7)
+        if remainingCells < 7 {
+            for _ in 0..<remainingCells {
+                days.append(nil)
+            }
+        }
+        
+        return days
+    }
+    
+    private func previousMonth() {
+        if let newDate = Calendar.current.date(byAdding: .month, value: -1, to: selectedMonth) {
+            selectedMonth = newDate
+        }
+    }
+    
+    private func nextMonth() {
+        if let newDate = Calendar.current.date(byAdding: .month, value: 1, to: selectedMonth) {
+            selectedMonth = newDate
+        }
+    }
+}
+
+// MARK: - Individual Day View
+struct WorkoutDayView: View {
+    let date: Date
+    let status: DailyWorkoutStatus
+    let isCurrentMonth: Bool
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            // Activity ring
+            ZStack {
+                // Background ring
+                Circle()
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 2)
+                    .frame(width: 24, height: 24)
+                
+                // Progress ring
+                if status.hasWorkout {
+                    Circle()
+                        .trim(from: 0, to: status.completionPercentage)
+                        .stroke(status.ringColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                        .frame(width: 24, height: 24)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut(duration: 0.5), value: status.completionPercentage)
+                }
+            }
+            
+            // Date number
+            Text("\(Calendar.current.component(.day, from: date))")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(isCurrentMonth ? .lightText : .secondaryText)
+        }
+        .frame(height: 32)
     }
 }
 
