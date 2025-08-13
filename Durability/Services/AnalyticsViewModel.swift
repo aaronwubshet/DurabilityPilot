@@ -53,19 +53,47 @@ class AnalyticsViewModel: ObservableObject {
         }
     }
     
-    // Get chart data for a specific metric
+    // Get chart data for a specific metric (last 7 days)
     func getChartData(for metric: AnalyticsMetric) -> [ChartDataPoint] {
         guard !assessmentResultsHistory.isEmpty else { return [] }
         
-        return assessmentResultsHistory.enumerated().map { index, result in
-            let value = getMetricValue(result: result, metric: metric)
-            return ChartDataPoint(
+        let calendar = Calendar.current
+        let now = Date()
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        
+        // Filter assessments from the last 7 days and create data points
+        var dataPoints: [ChartDataPoint] = []
+        
+        for (index, result) in assessmentResultsHistory.enumerated() {
+            // For now, we'll use the index as a proxy for date since we don't have actual assessment dates
+            // In a real implementation, you'd get the actual assessment date from the assessment history
+            let assessmentDate = calendar.date(byAdding: .day, value: -(assessmentResultsHistory.count - 1 - index), to: now) ?? now
+            
+            // Only include assessments from the last 7 days
+            if assessmentDate >= sevenDaysAgo {
+                let value = getMetricValue(result: result, metric: metric)
+                let dataPoint = ChartDataPoint(
+                    x: 0, // Will be calculated based on position
+                    y: value * 100, // Convert to percentage
+                    date: assessmentDate,
+                    label: "Assessment \(index + 1)"
+                )
+                dataPoints.append(dataPoint)
+            }
+        }
+        
+        // Sort by date (oldest first for left-to-right display)
+        dataPoints.sort { $0.date < $1.date }
+        
+        // Create final data points with correct x-axis positions
+        return dataPoints.enumerated().map { index, dataPoint in
+            ChartDataPoint(
                 x: Double(index),
-                y: value * 100, // Convert to percentage
-                date: Date(), // We could add actual dates here
-                label: "Assessment \(index + 1)"
+                y: dataPoint.y,
+                date: dataPoint.date,
+                label: dataPoint.label
             )
-        }.sorted { $0.date < $1.date }
+        }
     }
     
     private func getMetricValue(result: AssessmentResult, metric: AnalyticsMetric) -> Double {

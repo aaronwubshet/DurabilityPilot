@@ -162,19 +162,11 @@ struct ProgressTrendsCard: View {
                 }
             }
             
-            // Line Chart
-            if chartData.isEmpty {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 120)
-                    .overlay(
-                        Text("No trend data available")
-                            .foregroundColor(.secondaryText)
-                    )
-            } else {
-                AnalyticsLineChartView(data: chartData)
-                    .frame(height: 120)
-            }
+            // Standardized Line Chart
+            StandardizedLineChartView(
+                data: chartData,
+                title: selectedMetric.displayName
+            )
         }
         .padding(20)
         .background(Color.lightSpaceGrey)
@@ -182,119 +174,7 @@ struct ProgressTrendsCard: View {
     }
 }
 
-// MARK: - Analytics Line Chart
-struct AnalyticsLineChartView: View {
-    let data: [ChartDataPoint]
-    
-    var body: some View {
-        GeometryReader { geometry in
-            if data.count < 2 {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.2))
-                    .overlay(
-                        Text("Need at least 2 data points")
-                            .foregroundColor(.secondaryText)
-                            .font(.caption)
-                    )
-            } else {
-                ZStack {
-                    // Background grid
-                    AnalyticsChartGrid(data: data, geometry: geometry)
-                    
-                    // Line path
-                    AnalyticsChartLine(data: data, geometry: geometry)
-                    
-                    // Data points
-                    AnalyticsChartPoints(data: data, geometry: geometry)
-                }
-            }
-        }
-    }
-}
 
-struct AnalyticsChartGrid: View {
-    let data: [ChartDataPoint]
-    let geometry: GeometryProxy
-    
-    var body: some View {
-        let maxY = data.map { $0.y }.max() ?? 100
-        let minY = data.map { $0.y }.min() ?? 0
-        
-        VStack(spacing: 0) {
-            ForEach(0..<5, id: \.self) { index in
-                Divider()
-                    .background(Color.gray.opacity(0.2))
-                    .frame(height: 1)
-                
-                if index < 4 {
-                    Spacer()
-                }
-            }
-        }
-        .overlay(
-            HStack {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(0..<5, id: \.self) { index in
-                        let value = maxY - (maxY - minY) * Double(index) / 4
-                        Text("\(Int(value))")
-                            .font(.caption2)
-                            .foregroundColor(.secondaryText)
-                            .frame(height: geometry.size.height / 5)
-                    }
-                }
-                .frame(width: 30)
-                
-                Spacer()
-            }
-        )
-    }
-}
-
-struct AnalyticsChartLine: View {
-    let data: [ChartDataPoint]
-    let geometry: GeometryProxy
-    
-    var body: some View {
-        let maxY = data.map { $0.y }.max() ?? 100
-        let minY = data.map { $0.y }.min() ?? 0
-        let maxX = Double(data.count - 1)
-        
-        Path { path in
-            for (index, point) in data.enumerated() {
-                let x = (point.x / maxX) * geometry.size.width
-                let y = geometry.size.height - ((point.y - minY) / (maxY - minY)) * geometry.size.height
-                
-                if index == 0 {
-                    path.move(to: CGPoint(x: x, y: y))
-                } else {
-                    path.addLine(to: CGPoint(x: x, y: y))
-                }
-            }
-        }
-        .stroke(Color.electricGreen, lineWidth: 2)
-    }
-}
-
-struct AnalyticsChartPoints: View {
-    let data: [ChartDataPoint]
-    let geometry: GeometryProxy
-    
-    var body: some View {
-        let maxY = data.map { $0.y }.max() ?? 100
-        let minY = data.map { $0.y }.min() ?? 0
-        let maxX = Double(data.count - 1)
-        
-        ForEach(data) { point in
-            let x = (point.x / maxX) * geometry.size.width
-            let y = geometry.size.height - ((point.y - minY) / (maxY - minY)) * geometry.size.height
-            
-            Circle()
-                .fill(Color.electricGreen)
-                .frame(width: 6, height: 6)
-                .position(x: x, y: y)
-        }
-    }
-}
 
 // MARK: - Insights Card
 struct InsightsCard: View {

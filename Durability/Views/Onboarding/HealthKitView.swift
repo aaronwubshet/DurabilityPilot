@@ -57,25 +57,7 @@ struct HealthKitView: View {
             }
             .disabled(appState.healthKitService.isAuthorized)
             
-            // Debug button for troubleshooting
-            Button(action: {
-                Task {
-                    await debugHealthKitData()
-                }
-            }) {
-                HStack {
-                    Image(systemName: "ladybug.fill")
-                        .foregroundColor(.white)
-                    Text("Debug HealthKit Data")
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            .padding(.top, 10)
+
             
             if appState.healthKitService.isAuthorized {
                 HStack {
@@ -223,44 +205,7 @@ struct HealthKitView: View {
         await viewModel.nextStep()
     }
     
-    private func debugHealthKitData() async {
-        print("🔍 HealthKitView: Starting HealthKit debug...")
-        
-        // Check authorization status
-        appState.healthKitService.debugAuthorizationStatus()
-        
-        // Force refresh health data
-        await appState.healthKitService.forceRefreshHealthData()
-        
-        // Try to read individual values
-        print("🔍 HealthKitView: Testing individual HealthKit reads...")
-        
-        // Test weight reading
-        do {
-            let weight = try await appState.healthKitService.fetchWeight()
-            print("🔍 HealthKitView: Direct weight fetch result: \(weight?.description ?? "nil")")
-        } catch {
-            print("❌ HealthKitView: Direct weight fetch failed: \(error.localizedDescription)")
-        }
-        
-        // Test height reading
-        do {
-            let height = try await appState.healthKitService.fetchHeight()
-            print("🔍 HealthKitView: Direct height fetch result: \(height?.description ?? "nil")")
-        } catch {
-            print("❌ HealthKitView: Direct height fetch failed: \(error.localizedDescription)")
-        }
-        
-        // Test date of birth
-        let dob = appState.healthKitService.getDateOfBirth()
-        print("🔍 HealthKitView: Direct date of birth fetch result: \(dob?.description ?? "nil")")
-        
-        // Test biological sex
-        let sex = appState.healthKitService.getBiologicalSex()
-        print("🔍 HealthKitView: Direct biological sex fetch result: \(sex?.rawValue.description ?? "nil")")
-        
-        print("🔍 HealthKitView: Debug complete")
-    }
+
 }
 
 struct HealthKitPermissionRow: View {

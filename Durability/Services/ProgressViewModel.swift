@@ -61,7 +61,7 @@ class ProgressViewModel: ObservableObject {
         // In a real app, this would come from a workout tracking service
         let calendar = Calendar.current
         let now = Date()
-        let startDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        let _ = calendar.date(byAdding: .month, value: -1, to: now) ?? now
         
         var sampleCompletions: [WorkoutCompletion] = []
         
@@ -125,40 +125,44 @@ class ProgressViewModel: ObservableObject {
         return monthlyData
     }
     
-    // Get chart data for a specific time period
-    func getChartData(for timePeriod: TimePeriod) -> [ChartDataPoint] {
+    // Get chart data for automatic display (last 7 days of assessments)
+    func getChartData() -> [ChartDataPoint] {
         let calendar = Calendar.current
         let now = Date()
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
         
-        // Filter assessments based on time period
-        let filteredResults = assessmentResultsHistory.filter { result in
+        // Create data points with dates
+        var dataPoints: [ChartDataPoint] = []
+        
+        for result in assessmentResultsHistory {
             guard let assessment = assessmentHistory.first(where: { $0.assessmentId == result.assessmentId }) else {
-                return false
+                continue
             }
             
-            let daysSinceAssessment = calendar.dateComponents([.day], from: assessment.createdAt, to: now).day ?? 0
-            
-            switch timePeriod {
-            case .week:
-                return daysSinceAssessment <= 7
-            case .month:
-                return daysSinceAssessment <= 30
-            case .quarter:
-                return daysSinceAssessment <= 90
-            case .year:
-                return daysSinceAssessment <= 365
+            // Only include assessments from the last 7 days
+            if assessment.createdAt >= sevenDaysAgo {
+                let dataPoint = ChartDataPoint(
+                    x: 0, // Will be calculated based on position
+                    y: result.durabilityScore * 100, // Convert to percentage
+                    date: assessment.createdAt,
+                    label: "Assessment \(String(assessment.assessmentId ?? 0).prefix(8))"
+                )
+                dataPoints.append(dataPoint)
             }
         }
         
-        // Convert to chart data points
-        return filteredResults.enumerated().map { index, result in
+        // Sort by date (oldest first for left-to-right display)
+        dataPoints.sort { $0.date < $1.date }
+        
+        // Create final data points with correct x-axis positions
+        return dataPoints.enumerated().map { index, dataPoint in
             ChartDataPoint(
                 x: Double(index),
-                y: result.durabilityScore * 100, // Convert to percentage
-                date: assessmentHistory.first(where: { $0.assessmentId == result.assessmentId })?.createdAt ?? Date(),
-                label: "Assessment \(index + 1)"
+                y: dataPoint.y,
+                date: dataPoint.date,
+                label: dataPoint.label
             )
-        }.sorted { $0.date < $1.date }
+        }
     }
 }
 

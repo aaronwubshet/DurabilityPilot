@@ -65,9 +65,11 @@ class AuthService: ObservableObject {
         do {
             let session = try await supabase.auth.session
             self.user = session.user
+            print("🔍 AuthService: Found existing session for user: \(session.user.id.uuidString)")
         } catch {
             // No existing session
             self.user = nil
+            print("🔍 AuthService: No existing session found")
         }
     }
     

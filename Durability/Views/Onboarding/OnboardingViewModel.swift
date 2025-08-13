@@ -245,12 +245,15 @@ class OnboardingViewModel: ObservableObject {
             // Try to update existing profile first, if it fails, create new one
             do {
                 try await appState.profileService.updateProfile(profile)
+                print("🔍 OnboardingViewModel: Profile updated successfully with onboardingCompleted: \(profile.onboardingCompleted)")
             } catch {
                 // If update fails (profile doesn't exist), create new one
                 try await appState.profileService.createProfile(profile)
+                print("🔍 OnboardingViewModel: Profile created successfully with onboardingCompleted: \(profile.onboardingCompleted)")
             }
         } catch {
             errorMessage = "Failed to save profile: \(error.localizedDescription)"
+            print("❌ OnboardingViewModel: Failed to save profile: \(error.localizedDescription)")
             // Don't advance app state if profile creation failed
             return
         }
@@ -258,6 +261,7 @@ class OnboardingViewModel: ObservableObject {
         // Only advance app state if profile was successfully created
         await MainActor.run {
             appState.onboardingCompleted = true
+            print("🔍 OnboardingViewModel: Set appState.onboardingCompleted = true")
             
             // Note: User selections are now saved immediately when made, so no need to save again here
         }

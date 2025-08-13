@@ -13,12 +13,21 @@ struct HealthData: Codable {
 
 // MARK: - Workout Completion Models
 struct WorkoutCompletion: Codable, Identifiable {
-    let id = UUID()
+    let id: UUID
     let date: Date
     let completed: Bool
     let workoutType: String?
     let duration: TimeInterval?
     let intensity: WorkoutIntensity
+    
+    init(date: Date, completed: Bool, workoutType: String?, duration: TimeInterval?, intensity: WorkoutIntensity) {
+        self.id = UUID()
+        self.date = date
+        self.completed = completed
+        self.workoutType = workoutType
+        self.duration = duration
+        self.intensity = intensity
+    }
     
     enum WorkoutIntensity: String, Codable, CaseIterable {
         case low = "low"

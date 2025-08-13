@@ -120,12 +120,14 @@ struct AssessmentResultsView: View {
                                     
                                     if let profile = updatedProfile {
                                         try await appState.profileService.updateProfile(profile)
+                                        print("🔍 AssessmentResultsView: Profile updated with assessmentCompleted: \(profile.assessmentCompleted)")
                                         
                                         // Update app state to move to main app
                                         await MainActor.run {
                                             appState.currentUser = profile
                                             appState.assessmentCompleted = true
                                             appState.shouldShowAssessmentResults = false // Clear the results flag
+                                            print("🔍 AssessmentResultsView: Set appState.assessmentCompleted = true")
                                         }
                                     }
                                 } catch {

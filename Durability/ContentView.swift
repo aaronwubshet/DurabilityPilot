@@ -22,15 +22,19 @@ struct ContentView: View {
                     TransitionLoadingView()
                 } else if !appState.isAuthenticated {
                     AuthenticationView(authService: appState.authService)
-                } else if !appState.onboardingCompleted {
-                    OnboardingFlowView()
-                        .dismissKeyboardOnSwipe()
-                } else if appState.shouldShowAssessmentResults {
-                    // Always show assessment results when this flag is set
-                    AssessmentFlowView()
-                } else if !appState.assessmentCompleted {
-                    AssessmentFlowView()
+                } else if !appState.onboardingCompleted || !appState.assessmentCompleted {
+                    // Show onboarding if either onboarding or assessment is not completed
+                    if !appState.onboardingCompleted {
+                        OnboardingFlowView()
+                            .dismissKeyboardOnSwipe()
+                    } else if appState.shouldShowAssessmentResults {
+                        // Always show assessment results when this flag is set
+                        AssessmentFlowView()
+                    } else {
+                        AssessmentFlowView()
+                    }
                 } else {
+                    // Both onboarding and assessment are completed - show main app
                     MainTabView()
                 }
             }

@@ -301,23 +301,25 @@ struct AccountCard: View {
                 .foregroundColor(.white)
             
             VStack(spacing: 12) {
-                NavigationLink(destination: LegalTextView(title: "Privacy Policy")) {
+                Link(destination: URL(string: "https://www.mydurability.ai/privacy-policy.html")!) {
                     AccountRow(
                         icon: "doc.text.fill",
                         title: "Privacy Policy",
                         description: "Read our privacy policy"
                     )
                 }
+                .buttonStyle(PlainButtonStyle())
                 
-                NavigationLink(destination: LegalTextView(title: "Terms of Service")) {
+                Link(destination: URL(string: "https://www.mydurability.ai/terms.html")!) {
                     AccountRow(
                         icon: "doc.text.fill",
                         title: "Terms of Service",
                         description: "Read our terms of service"
                     )
                 }
+                .buttonStyle(PlainButtonStyle())
                 
-                NavigationLink(destination: LegalTextView(title: "Help & Support")) {
+                NavigationLink(destination: FeedbackFormView()) {
                     AccountRow(
                         icon: "questionmark.circle.fill",
                         title: "Help & Support",
