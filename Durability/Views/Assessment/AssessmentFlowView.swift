@@ -18,7 +18,7 @@ struct AssessmentFlowView: View {
                     AssessmentInstructionsView(viewModel: viewModel)
                 } else if viewModel.isRecording {
                     AssessmentRecordingView(viewModel: viewModel)
-                } else if viewModel.showingResults || appState.shouldShowAssessmentResults {
+                } else if viewModel.showingResults || appState.appFlowState == .assessmentResults {
                     AssessmentResultsView(viewModel: viewModel, assessmentResults: assessmentResults)
                 } else {
                     AssessmentStartView(viewModel: viewModel)
@@ -140,7 +140,7 @@ class AssessmentViewModel: ObservableObject {
                 // Store results in AppState and set the app state to show assessment results
                 await MainActor.run {
                     appState.currentAssessmentResults = results
-                    appState.shouldShowAssessmentResults = true
+                    appState.appFlowState = .assessmentResults
                 }
                 
             } catch {
@@ -170,16 +170,14 @@ class AssessmentViewModel: ObservableObject {
                     // Update app state to move to main app
                     await MainActor.run {
                         appState.currentUser = profile
-                        appState.assessmentCompleted = true
-                        appState.shouldShowAssessmentResults = false // Clear the results flag
+                        appState.appFlowState = .mainApp
                         print("🔍 AssessmentFlowView: Set appState.assessmentCompleted = true")
                     }
                 }
             } catch {
                 // Even if database update fails, try to advance to main app
                 await MainActor.run {
-                    appState.assessmentCompleted = true
-                    appState.shouldShowAssessmentResults = false
+                    appState.appFlowState = .mainApp
                 }
             }
         }

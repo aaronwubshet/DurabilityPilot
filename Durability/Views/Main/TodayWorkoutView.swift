@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TodayWorkoutView: View {
     @EnvironmentObject var appState: AppState
+    @Binding var showingProfile: Bool
     @State private var currentWorkout: DailyWorkout?
     @State private var isLoading = false
     @State private var showRunner = false
@@ -31,7 +32,9 @@ struct TodayWorkoutView: View {
             .navigationTitle("Today's Workout")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(destination: ProfileView()) {
+                    Button(action: {
+                        showingProfile = true
+                    }) {
                         Image(systemName: "person.circle")
                     }
                 }
@@ -244,6 +247,6 @@ struct NoWorkoutView: View {
 }
 
 #Preview {
-    TodayWorkoutView()
+    TodayWorkoutView(showingProfile: .constant(false))
         .environmentObject(AppState())
 }

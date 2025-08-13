@@ -3,6 +3,7 @@ import SwiftUI
 struct ProgressDashboardView: View {
     @StateObject private var viewModel = ProgressViewModel()
     @EnvironmentObject var appState: AppState
+    @Binding var showingProfile: Bool
 
     var body: some View {
         NavigationStack {
@@ -62,7 +63,9 @@ struct ProgressDashboardView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         
-                        NavigationLink(destination: ProfileView()) {
+                        Button(action: {
+                            showingProfile = true
+                        }) {
                             Image(systemName: "person.circle")
                                 .foregroundColor(.lightText)
                         }
@@ -77,10 +80,9 @@ struct ProgressDashboardView: View {
     
     /// Reset app state to allow a fresh assessment retake
     private func resetForRetake() async {
-        // Reset assessment completion status
+        // Set app flow state to start re-assessment
         await MainActor.run {
-            appState.assessmentCompleted = false
-            appState.shouldShowAssessmentResults = false
+            appState.appFlowState = .assessment
             appState.currentAssessmentResults = []
         }
         
@@ -579,7 +581,7 @@ struct WorkoutDayView: View {
 }
 
 #Preview {
-    ProgressDashboardView()
+    ProgressDashboardView(showingProfile: .constant(false))
         .environmentObject(AppState())
 }
 

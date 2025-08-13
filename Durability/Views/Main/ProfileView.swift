@@ -2,9 +2,13 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
     @State private var showingRetakeAlert = false
+    @State private var showingLatestResults = false
     @State private var notificationsEnabled = true
     @State private var healthKitEnabled = true
+    @State private var latestAssessmentResults: [AssessmentResult] = []
+    @State private var isLoadingResults = false
     
     var body: some View {
         NavigationStack {
@@ -25,7 +29,13 @@ struct ProfileView: View {
                     // Quick Actions Card
                     QuickActionsCard(
                         profileId: appState.currentUser?.id,
-                        onRetakeAssessment: { showingRetakeAlert = true }
+                        onRetakeAssessment: { showingRetakeAlert = true },
+                        onViewLatestResults: { 
+                            Task {
+                                await loadLatestAssessmentResults()
+                                showingLatestResults = true
+                            }
+                        }
                     )
                     
                     // Settings Card
@@ -43,7 +53,15 @@ struct ProfileView: View {
                 .padding(.bottom, 20)
             }
             .background(Color.darkSpaceGrey)
-            .navigationBarHidden(true)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.electricGreen)
+                }
+            }
             .alert("Retake Movement Assessment", isPresented: $showingRetakeAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Start Retake", role: .destructive) {
@@ -54,34 +72,74 @@ struct ProfileView: View {
             } message: {
                 Text("This will start a new movement assessment. Your previous assessment results will be preserved, but you'll need to complete the full assessment again.")
             }
+            .sheet(isPresented: $showingLatestResults) {
+                AssessmentResultsView(
+                    viewModel: AssessmentViewModel(),
+                    assessmentResults: latestAssessmentResults,
+                    isViewOnly: true
+                )
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Done") {
+                            showingLatestResults = false
+                        }
+                        .foregroundColor(.electricGreen)
+                    }
+                }
+            }
         }
     }
     
     /// Reset app state to allow a fresh assessment retake
     private func resetForRetake() async {
-        // Reset assessment completion status
+        // Set app flow state to start re-assessment
         await MainActor.run {
-            appState.assessmentCompleted = false
-            appState.shouldShowAssessmentResults = false
+            appState.appFlowState = .assessment
             appState.currentAssessmentResults = []
         }
         
-        // Update the user profile in the database to mark assessment as not completed
-        if appState.authService.user?.id != nil {
-            do {
-                var updatedProfile = appState.currentUser
-                updatedProfile?.assessmentCompleted = false
-                updatedProfile?.updatedAt = Date()
-                
-                if let profile = updatedProfile {
-                    try await appState.profileService.updateProfile(profile)
-                    
-                    await MainActor.run {
-                        appState.currentUser = profile
-                    }
+        // Note: We do NOT update assessment_completed to false in the database
+        // because this flag should only be set to true once the user has completed
+        // their first assessment, and should never be reset to false
+    }
+    
+    /// Load the latest assessment results from the database
+    private func loadLatestAssessmentResults() async {
+        await MainActor.run {
+            isLoadingResults = true
+        }
+        
+        guard let userId = appState.authService.user?.id.uuidString else {
+            await MainActor.run {
+                isLoadingResults = false
+            }
+            return
+        }
+        
+        do {
+            // Get the latest assessment
+            let latestAssessment = try await appState.assessmentService.getLatestAssessment(profileId: userId)
+            
+            guard let assessment = latestAssessment, let assessmentId = assessment.assessmentId else {
+                await MainActor.run {
+                    latestAssessmentResults = []
+                    isLoadingResults = false
                 }
-            } catch {
-                // Handle error silently
+                return
+            }
+            
+            // Get the results for this assessment
+            let results = try await appState.assessmentService.getAssessmentResults(assessmentId: assessmentId)
+            
+            await MainActor.run {
+                latestAssessmentResults = results
+                isLoadingResults = false
+            }
+            
+        } catch {
+            await MainActor.run {
+                latestAssessmentResults = []
+                isLoadingResults = false
             }
         }
     }
@@ -128,6 +186,7 @@ struct UserProfileCard: View {
 struct QuickActionsCard: View {
     let profileId: String?
     let onRetakeAssessment: () -> Void
+    let onViewLatestResults: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -146,13 +205,8 @@ struct QuickActionsCard: View {
                         )
                     }
                     
-                    NavigationLink(destination: ProgressDashboardView()) {
-                        QuickActionRow(
-                            icon: "chart.bar.fill",
-                            title: "View Progress",
-                            description: "See your fitness journey"
-                        )
-                    }
+                    // Removed navigation to ProgressDashboardView since it's accessible via tab bar
+                    // and ProfileView is now presented as a sheet
                 }
                 
                 Button(action: onRetakeAssessment) {
@@ -160,6 +214,14 @@ struct QuickActionsCard: View {
                         icon: "arrow.clockwise",
                         title: "Re-Assess",
                         description: "Take a new movement assessment"
+                    )
+                }
+                
+                Button(action: onViewLatestResults) {
+                    QuickActionRow(
+                        icon: "chart.bar.fill",
+                        title: "View Latest Results",
+                        description: "See your recent assessment summary"
                     )
                 }
             }

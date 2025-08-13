@@ -6,11 +6,29 @@ class AppState: ObservableObject {
     @Published var isAuthenticated = false
     @Published var isLoading = false
     @Published var currentUser: UserProfile?
-    @Published var onboardingCompleted = false
-    @Published var assessmentCompleted = false
     @Published var currentPlan: Plan?
-    @Published var shouldShowAssessmentResults = false // New state to track when to show results
     @Published var currentAssessmentResults: [AssessmentResult] = [] // Store assessment results
+    
+    // Single source of truth for app flow state
+    enum AppFlowState {
+        case loading
+        case unauthenticated
+        case onboarding
+        case assessment
+        case assessmentResults
+        case mainApp
+    }
+    
+    @Published var appFlowState: AppFlowState = .loading
+    
+    // Computed properties for backward compatibility
+    var onboardingCompleted: Bool {
+        currentUser?.onboardingCompleted ?? false
+    }
+    
+    var assessmentCompleted: Bool {
+        currentUser?.assessmentCompleted ?? false
+    }
     
     // Profile caching for offline scenarios only
     @Published var profileCache: [String: UserProfile] = [:]
@@ -43,8 +61,7 @@ class AppState: ObservableObject {
                 // No authenticated user - start fresh
                 isAuthenticated = false
                 currentUser = nil
-                onboardingCompleted = false
-                assessmentCompleted = false
+                appFlowState = .unauthenticated
             }
             isLoading = false
         }
@@ -60,8 +77,7 @@ class AppState: ObservableObject {
             await loadUserProfileFromDatabase(userId: user.id.uuidString)
         } else {
             isAuthenticated = false
-            onboardingCompleted = false
-            assessmentCompleted = false
+            appFlowState = .unauthenticated
         }
     }
     
@@ -82,8 +98,16 @@ class AppState: ObservableObject {
             // Update app state based on database data
             await MainActor.run {
                 self.currentUser = profile
-                self.onboardingCompleted = profile.onboardingCompleted
-                self.assessmentCompleted = profile.assessmentCompleted
+                
+                // Set app flow state based on completion status
+                if !profile.onboardingCompleted {
+                    self.appFlowState = .onboarding
+                } else if !profile.assessmentCompleted {
+                    self.appFlowState = .assessment
+                } else {
+                    self.appFlowState = .mainApp
+                }
+                
                 print("🔍 AppState: Loaded profile - onboardingCompleted: \(profile.onboardingCompleted), assessmentCompleted: \(profile.assessmentCompleted)")
             }
             
@@ -94,8 +118,7 @@ class AppState: ObservableObject {
             await MainActor.run {
                 self.isAuthenticated = false
                 self.currentUser = nil
-                self.onboardingCompleted = false
-                self.assessmentCompleted = false
+                self.appFlowState = .unauthenticated
             }
             
         case .noConnection:
@@ -103,8 +126,7 @@ class AppState: ObservableObject {
             await MainActor.run {
                 self.isAuthenticated = false
                 self.currentUser = nil
-                self.onboardingCompleted = false
-                self.assessmentCompleted = false
+                self.appFlowState = .unauthenticated
             }
         }
     }
@@ -121,7 +143,7 @@ class AppState: ObservableObject {
         case .success(let profile):
             // Use the assessmentCompleted field from the database profile
             await MainActor.run {
-                self.assessmentCompleted = profile.assessmentCompleted
+                self.currentUser?.assessmentCompleted = profile.assessmentCompleted
             }
             
         case .failure(let error, _, _):
@@ -129,12 +151,12 @@ class AppState: ObservableObject {
             
             // No local fallback - just assume no assessment completed
             await MainActor.run {
-                self.assessmentCompleted = false
+                self.currentUser?.assessmentCompleted = false
             }
             
         case .noConnection:
             await MainActor.run {
-                self.assessmentCompleted = false
+                self.currentUser?.assessmentCompleted = false
             }
         }
     }
@@ -160,9 +182,7 @@ class AppState: ObservableObject {
         await authService.signOut()
         isAuthenticated = false
         currentUser = nil
-        onboardingCompleted = false
-        assessmentCompleted = false
-        shouldShowAssessmentResults = false
+        appFlowState = .unauthenticated
         currentPlan = nil
     }
     
@@ -195,9 +215,7 @@ class AppState: ObservableObject {
         // Reset app state
         isAuthenticated = false
         currentUser = nil
-        onboardingCompleted = false
-        assessmentCompleted = false
-        shouldShowAssessmentResults = false
+        appFlowState = .unauthenticated
         currentPlan = nil
         
         // Clear all local data

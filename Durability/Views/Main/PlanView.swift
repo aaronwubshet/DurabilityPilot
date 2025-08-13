@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PlanView: View {
+    @Binding var showingProfile: Bool
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -21,7 +23,9 @@ struct PlanView: View {
             .navigationTitle("Plan")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(destination: ProfileView()) {
+                    Button(action: {
+                        showingProfile = true
+                    }) {
                         Image(systemName: "person.circle")
                     }
                 }
@@ -31,5 +35,5 @@ struct PlanView: View {
 }
 
 #Preview {
-    PlanView()
+    PlanView(showingProfile: .constant(false))
 }

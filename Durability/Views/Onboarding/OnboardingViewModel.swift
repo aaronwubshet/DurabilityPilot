@@ -260,8 +260,18 @@ class OnboardingViewModel: ObservableObject {
         
         // Only advance app state if profile was successfully created
         await MainActor.run {
-            appState.onboardingCompleted = true
-            print("🔍 OnboardingViewModel: Set appState.onboardingCompleted = true")
+            // Update the current user profile with onboarding completed
+            var updatedProfile = appState.currentUser
+            updatedProfile?.onboardingCompleted = true
+            updatedProfile?.updatedAt = Date()
+            
+            if let profile = updatedProfile {
+                appState.currentUser = profile
+                // Set app flow state to assessment since onboarding is now complete
+                appState.appFlowState = .assessment
+            }
+            
+            print("🔍 OnboardingViewModel: Set onboarding completed and moved to assessment state")
             
             // Note: User selections are now saved immediately when made, so no need to save again here
         }

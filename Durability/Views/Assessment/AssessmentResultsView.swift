@@ -7,10 +7,12 @@ struct AssessmentResultsView: View {
     
     // Allow passing assessment results directly
     let assessmentResults: [AssessmentResult]
+    let isViewOnly: Bool
     
-    init(viewModel: AssessmentViewModel, assessmentResults: [AssessmentResult] = []) {
+    init(viewModel: AssessmentViewModel, assessmentResults: [AssessmentResult] = [], isViewOnly: Bool = false) {
         self.viewModel = viewModel
         self.assessmentResults = assessmentResults.isEmpty ? viewModel.assessmentResults : assessmentResults
+        self.isViewOnly = isViewOnly
     }
     
     var body: some View {
@@ -69,86 +71,87 @@ struct AssessmentResultsView: View {
                     fallbackResults: summaryViewModel.getDefaultBodyAreaResults()
                 )
                 
-                // Action Buttons - Different options based on first completion vs retake
-                VStack(spacing: 12) {
-                    if !appState.assessmentCompleted {
-                        // First time completion - only show "Generate My Personalized Plan"
-                        Button(action: {
-                            viewModel.completeAssessment(appState: appState)
-                        }) {
-                            HStack {
-                                Image(systemName: "sparkles")
-                                Text("Generate My Personalized Plan")
-                            }
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                    } else {
-                        // Retake scenario - show "Start New Assessment" and "Go to Main App"
-                        Button(action: {
-                            // Start a new assessment by resetting the view model state
-                            viewModel.resetForNewAssessment()
-                            // Clear the app state flag to allow normal assessment flow
-                            appState.shouldShowAssessmentResults = false
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                Text("Start New Assessment")
-                            }
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        
-                        Button(action: {
-                            // Mark assessment as completed and go to main app
-                            Task {
-                                guard appState.authService.user?.id.uuidString != nil else { return }
-                                
-                                do {
-                                    // Update user profile to mark assessment as completed
-                                    var updatedProfile = appState.currentUser
-                                    updatedProfile?.assessmentCompleted = true
-                                    updatedProfile?.updatedAt = Date()
-                                    
-                                    if let profile = updatedProfile {
-                                        try await appState.profileService.updateProfile(profile)
-                                        print("🔍 AssessmentResultsView: Profile updated with assessmentCompleted: \(profile.assessmentCompleted)")
-                                        
-                                        // Update app state to move to main app
-                                        await MainActor.run {
-                                            appState.currentUser = profile
-                                            appState.assessmentCompleted = true
-                                            appState.shouldShowAssessmentResults = false // Clear the results flag
-                                            print("🔍 AssessmentResultsView: Set appState.assessmentCompleted = true")
-                                        }
-                                    }
-                                } catch {
-                                    // Handle error if needed
+                // Action Buttons - Only show if not in view-only mode
+                if !isViewOnly {
+                    VStack(spacing: 12) {
+                        if !appState.assessmentCompleted {
+                            // First time completion - only show "Generate My Personalized Plan"
+                            Button(action: {
+                                viewModel.completeAssessment(appState: appState)
+                            }) {
+                                HStack {
+                                    Image(systemName: "sparkles")
+                                    Text("Generate My Personalized Plan")
                                 }
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
                             }
-                        }) {
-                            HStack {
-                                Image(systemName: "house.fill")
-                                Text("Go to Main App")
+                        } else {
+                            // Retake scenario - show "Start New Assessment" and "Go to Main App"
+                            Button(action: {
+                                // Start a new assessment by resetting the view model state
+                                viewModel.resetForNewAssessment()
+                                // Set app flow state to start re-assessment
+                                appState.appFlowState = .assessment
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.clockwise")
+                                    Text("Start New Assessment")
+                                }
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
                             }
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.electricGreen)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                            
+                            Button(action: {
+                                // Mark assessment as completed and go to main app
+                                Task {
+                                    guard appState.authService.user?.id.uuidString != nil else { return }
+                                    
+                                    do {
+                                        // Update user profile to mark assessment as completed
+                                        var updatedProfile = appState.currentUser
+                                        updatedProfile?.assessmentCompleted = true
+                                        updatedProfile?.updatedAt = Date()
+                                        
+                                        if let profile = updatedProfile {
+                                            try await appState.profileService.updateProfile(profile)
+                                            print("🔍 AssessmentResultsView: Profile updated with assessmentCompleted: \(profile.assessmentCompleted)")
+                                            
+                                            // Update app state to move to main app
+                                            await MainActor.run {
+                                                appState.currentUser = profile
+                                                appState.appFlowState = .mainApp
+                                                print("🔍 AssessmentResultsView: Set appState.assessmentCompleted = true")
+                                            }
+                                        }
+                                    } catch {
+                                        // Handle error if needed
+                                    }
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: "house.fill")
+                                    Text("Go to Main App")
+                                }
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.electricGreen)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                            }
                         }
                     }
+                    .padding(.top, 8)
                 }
-                .padding(.top, 8)
                 
                 Spacer(minLength: 20)
             }
