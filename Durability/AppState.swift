@@ -75,7 +75,7 @@ class AppState: ObservableObject {
             // Check assessment completion from database
             await checkAssessmentCompletionFromDatabase(userId: userId)
             
-        case .failure(let error, let attempt, let maxAttempts):
+        case .failure(let error, _, _):
             ErrorHandler.logError(error, context: "AppState.loadUserProfileFromDatabase")
             
             // No local fallback - just set to not authenticated
@@ -112,7 +112,7 @@ class AppState: ObservableObject {
                 self.assessmentCompleted = profile.assessmentCompleted
             }
             
-        case .failure(let error, let attempt, let maxAttempts):
+        case .failure(let error, _, _):
             ErrorHandler.logError(error, context: "AppState.checkAssessmentCompletionFromDatabase")
             
             // No local fallback - just assume no assessment completed

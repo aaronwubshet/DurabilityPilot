@@ -10,22 +10,3 @@ struct HealthData: Codable {
     let date: Date
 }
 
-// MARK: - Progress Tracking
-struct ProgressData: Codable {
-    let date: Date
-    let durabilityScore: Double
-    let superMetrics: SuperMetrics
-}
-
-struct SuperMetrics: Codable {
-    let rangeOfMotion: Double
-    let flexibility: Double
-    let mobility: Double
-    let functionalStrength: Double
-    let aerobicCapacity: Double
-    
-    var average: Double {
-        return (rangeOfMotion + flexibility + mobility + functionalStrength + aerobicCapacity) / 5.0
-    }
-}
-

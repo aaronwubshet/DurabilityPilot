@@ -6,6 +6,7 @@ class ProgressViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var assessmentHistory: [Assessment] = []
     @Published var latestAssessmentResult: AssessmentResult?
+    @Published var assessmentResultsHistory: [AssessmentResult] = []
     @Published var errorMessage: String?
 
     func loadProgressData(appState: AppState) {
@@ -22,6 +23,18 @@ class ProgressViewModel: ObservableObject {
                 let history = try await appState.assessmentService.getAssessmentHistory(profileId: profileId)
                 self.assessmentHistory = history
 
+                // Get results for all assessments to build progress history
+                var allResults: [AssessmentResult] = []
+                for assessment in history {
+                    if let assessmentId = assessment.assessmentId {
+                        let results = try await appState.assessmentService.getAssessmentResults(assessmentId: assessmentId)
+                        if let overallResult = results.first(where: { $0.bodyArea == "Overall" }) {
+                            allResults.append(overallResult)
+                        }
+                    }
+                }
+                self.assessmentResultsHistory = allResults
+
                 // Get the latest assessment and its results
                 if let latestAssessment = history.first, let assessmentId = latestAssessment.assessmentId {
                     let results = try await appState.assessmentService.getAssessmentResults(assessmentId: assessmentId)
@@ -36,5 +49,50 @@ class ProgressViewModel: ObservableObject {
             }
         }
     }
+    
+    // Get chart data for a specific time period
+    func getChartData(for timePeriod: TimePeriod) -> [ChartDataPoint] {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Filter assessments based on time period
+        let filteredResults = assessmentResultsHistory.filter { result in
+            guard let assessment = assessmentHistory.first(where: { $0.assessmentId == result.assessmentId }) else {
+                return false
+            }
+            
+            let daysSinceAssessment = calendar.dateComponents([.day], from: assessment.createdAt, to: now).day ?? 0
+            
+            switch timePeriod {
+            case .week:
+                return daysSinceAssessment <= 7
+            case .month:
+                return daysSinceAssessment <= 30
+            case .quarter:
+                return daysSinceAssessment <= 90
+            case .year:
+                return daysSinceAssessment <= 365
+            }
+        }
+        
+        // Convert to chart data points
+        return filteredResults.enumerated().map { index, result in
+            ChartDataPoint(
+                x: Double(index),
+                y: result.durabilityScore * 100, // Convert to percentage
+                date: assessmentHistory.first(where: { $0.assessmentId == result.assessmentId })?.createdAt ?? Date(),
+                label: "Assessment \(index + 1)"
+            )
+        }.sorted { $0.date < $1.date }
+    }
+}
+
+// MARK: - Chart Data Models
+struct ChartDataPoint: Identifiable {
+    let id = UUID()
+    let x: Double
+    let y: Double
+    let date: Date
+    let label: String
 }
 

@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import AuthenticationServices
 
 @MainActor
 class AuthenticationViewModel: ObservableObject {

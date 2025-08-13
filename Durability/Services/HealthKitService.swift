@@ -1,6 +1,5 @@
 import Foundation
 import HealthKit
-import Combine
 
 @MainActor
 class HealthKitService: ObservableObject {
@@ -107,7 +106,7 @@ class HealthKitService: ObservableObject {
                     sex: nil,
                     heightCm: nil,
                     weightKg: nil,
-                    isPilot: false,
+                    isPilot: true,
                     onboardingCompleted: false,
                     assessmentCompleted: false,
                     trainingPlanInfo: nil,

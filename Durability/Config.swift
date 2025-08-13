@@ -63,6 +63,5 @@ extension Color {
     
     // Accent Colors (keeping your electric green)
     static let electricGreen = Color(red: 0.043, green: 0.847, blue: 0.0)
-    static let brightGreen = Color(red: 0.2, green: 0.9, blue: 0.2)
 }
 

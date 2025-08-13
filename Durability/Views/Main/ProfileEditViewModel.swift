@@ -141,7 +141,7 @@ class ProfileEditViewModel: ObservableObject {
                 sex: sex,
                 heightCm: convertHeightToCm(),
                 weightKg: nil, // Will be set using conversion method
-                isPilot: false,
+                isPilot: true,
                 onboardingCompleted: true,
                 assessmentCompleted: true, // Preserve assessment status
                 trainingPlanInfo: hasTrainingPlan ? trainingPlanInfo : nil,

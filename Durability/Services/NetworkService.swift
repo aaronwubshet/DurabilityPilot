@@ -1,6 +1,5 @@
 import Foundation
 import Network
-import Combine
 import Supabase
 
 /// Centralized network service for handling connectivity, retries, and resilience
@@ -132,7 +131,8 @@ extension NetworkService {
             }
         }
         
-        return .failure(lastError ?? NetworkError.unknown, attempt: config.maxAttempts, maxAttempts: config.maxAttempts)
+        let finalError = lastError ?? NetworkError.unknown
+        return .failure(finalError, attempt: config.maxAttempts, maxAttempts: config.maxAttempts)
     }
     
     /// Determines if an error should trigger a retry

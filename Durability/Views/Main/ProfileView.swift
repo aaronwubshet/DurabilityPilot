@@ -89,7 +89,7 @@ struct ProfileView: View {
         print("   - currentAssessmentResults count: \(appState.currentAssessmentResults.count)")
         
         // Update the user profile in the database to mark assessment as not completed
-        if let userId = appState.authService.user?.id.uuidString {
+        if appState.authService.user?.id != nil {
             do {
                 var updatedProfile = appState.currentUser
                 updatedProfile?.assessmentCompleted = false

@@ -279,7 +279,7 @@ class OnboardingViewModel: ObservableObject {
             sex: sex,
             heightCm: heightCm,
             weightKg: nil, // Will be set using the conversion method
-            isPilot: false,
+            isPilot: true,
             onboardingCompleted: true,
             assessmentCompleted: false,
             trainingPlanInfo: hasTrainingPlan ? trainingPlanInfo : nil,
@@ -566,7 +566,7 @@ class OnboardingViewModel: ObservableObject {
     
     /// Saves the current step's data to the database before proceeding to the next step
     private func saveCurrentStepData() async {
-        guard let appState = appState else { return }
+        guard appState != nil else { return }
         
         print("🔄 OnboardingViewModel: saveCurrentStepData called for step: \(currentStep)")
         

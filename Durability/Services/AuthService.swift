@@ -1,6 +1,5 @@
 import Foundation
 import Supabase
-import AuthenticationServices
 
 @MainActor
 class AuthService: ObservableObject {
@@ -166,7 +165,7 @@ class AuthService: ObservableObject {
                 id: userId,
                 firstName: appleData.firstName ?? "",
                 lastName: appleData.lastName ?? "",
-                isPilot: false,
+                isPilot: true,
                 onboardingCompleted: false,
                 assessmentCompleted: false,
                 createdAt: ISO8601DateFormatter().string(from: Date()),

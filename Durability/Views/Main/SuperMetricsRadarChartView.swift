@@ -1,17 +1,15 @@
 import SwiftUI
+import Foundation
 
 struct SuperMetricsRadarChartView: View {
     var results: AssessmentResult?
     var history: [Assessment]?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Super Metrics")
-                .font(.title2)
-                .fontWeight(.semibold)
-
+        VStack(spacing: 20) {
             if let results = results {
-                SimpleMetricsChart(
+                // Radar Chart
+                RadarChartView(
                     data: [
                         results.rangeOfMotionScore,
                         results.flexibilityScore,
@@ -19,50 +17,228 @@ struct SuperMetricsRadarChartView: View {
                         results.mobilityScore,
                         results.aerobicCapacityScore
                     ],
-                    labels: ["ROM", "Flex", "Strength", "Mobility", "Aerobic"]
+                    labels: ["Range of Motion", "Flexibility", "Mobility", "Functional Strength", "Aerobic Capacity"]
                 )
-                .frame(height: 250)
+                .frame(height: 200)
+                
+                // Metrics List
+                MetricsListView(results: results)
             } else {
-                Text("No data available.")
-                    .foregroundColor(.secondary)
+                Text("No metrics data available")
+                    .foregroundColor(.secondaryText)
             }
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(20)
     }
 }
 
-// A very simple metrics chart using bars instead of radar
-struct SimpleMetricsChart: View {
-    var data: [Double]
-    var labels: [String]
+// MARK: - Radar Chart Implementation
+struct RadarChartView: View {
+    let data: [Double]
+    let labels: [String]
+    
+    private let numberOfPoints = 5
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+            let chartRadius = min(geometry.size.width, geometry.size.height) / 2 - 20
+            
+            ZStack {
+                // Background circles
+                BackgroundCircles(chartRadius: chartRadius)
+                
+                // Radar lines (spokes)
+                RadarLines(numberOfPoints: numberOfPoints, center: center, chartRadius: chartRadius)
+                
+                // Data polygon
+                if data.count == numberOfPoints {
+                    RadarPolygon(data: data, center: center, radius: chartRadius)
+                        .fill(Color.electricGreen.opacity(0.3))
+                        .overlay(
+                            RadarPolygon(data: data, center: center, radius: chartRadius)
+                                .stroke(Color.electricGreen, lineWidth: 2)
+                        )
+                }
+                
+                // Data points
+                DataPoints(data: data, numberOfPoints: numberOfPoints, center: center, chartRadius: chartRadius)
+            }
+        }
+    }
+}
+
+struct BackgroundCircles: View {
+    let chartRadius: CGFloat
+    
+    var body: some View {
+        ForEach(0..<5, id: \.self) { level in
+            let circleRadius = chartRadius * CGFloat(level + 1) / 5
+            Circle()
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                .frame(width: circleRadius * 2, height: circleRadius * 2)
+        }
+    }
+}
+
+struct RadarLines: View {
+    let numberOfPoints: Int
+    let center: CGPoint
+    let chartRadius: CGFloat
+    
+    var body: some View {
+        ForEach(0..<numberOfPoints, id: \.self) { index in
+            RadarLine(
+                index: index,
+                numberOfPoints: numberOfPoints,
+                center: center,
+                chartRadius: chartRadius
+            )
+        }
+    }
+}
+
+struct RadarLine: View {
+    let index: Int
+    let numberOfPoints: Int
+    let center: CGPoint
+    let chartRadius: CGFloat
+    
+    var body: some View {
+        let endPoint = calculateEndPoint()
+        
+        Path { path in
+            path.move(to: center)
+            path.addLine(to: endPoint)
+        }
+        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+    }
+    
+    private func calculateEndPoint() -> CGPoint {
+        let angle = CGFloat((2 * .pi * Double(index)) / Double(numberOfPoints) - .pi / 2)
+        return CGPoint(
+            x: center.x + cos(Double(angle)) * chartRadius,
+            y: center.y + sin(Double(angle)) * chartRadius
+        )
+    }
+}
+
+struct DataPoints: View {
+    let data: [Double]
+    let numberOfPoints: Int
+    let center: CGPoint
+    let chartRadius: CGFloat
+    
+    var body: some View {
+        ForEach(0..<min(data.count, numberOfPoints), id: \.self) { index in
+            DataPoint(
+                index: index,
+                value: data[index],
+                numberOfPoints: numberOfPoints,
+                center: center,
+                chartRadius: chartRadius
+            )
+        }
+    }
+}
+
+struct DataPoint: View {
+    let index: Int
+    let value: Double
+    let numberOfPoints: Int
+    let center: CGPoint
+    let chartRadius: CGFloat
+    
+    var body: some View {
+        let pointPosition = calculatePointPosition()
+        
+        Circle()
+            .fill(Color.electricGreen)
+            .frame(width: 6, height: 6)
+            .position(pointPosition)
+    }
+    
+    private func calculatePointPosition() -> CGPoint {
+        let angle = CGFloat((2 * .pi * Double(index)) / Double(numberOfPoints) - .pi / 2)
+        let pointRadius = chartRadius * value
+        return CGPoint(
+            x: center.x + cos(Double(angle)) * pointRadius,
+            y: center.y + sin(Double(angle)) * pointRadius
+        )
+    }
+}
+
+struct RadarPolygon: Shape {
+    let data: [Double]
+    let center: CGPoint
+    let radius: CGFloat
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let numberOfPoints = data.count
+        
+        guard numberOfPoints > 0 else { return path }
+        
+        for (index, value) in data.enumerated() {
+            let point = calculatePoint(index: index, value: value, numberOfPoints: numberOfPoints)
+            
+            if index == 0 {
+                path.move(to: point)
+            } else {
+                path.addLine(to: point)
+            }
+        }
+        
+        path.closeSubpath()
+        return path
+    }
+    
+    private func calculatePoint(index: Int, value: Double, numberOfPoints: Int) -> CGPoint {
+        let angle = CGFloat((2 * .pi * Double(index)) / Double(numberOfPoints) - .pi / 2)
+        let pointRadius = radius * value
+        return CGPoint(
+            x: center.x + cos(Double(angle)) * pointRadius,
+            y: center.y + sin(Double(angle)) * pointRadius
+        )
+    }
+}
+
+// MARK: - Metrics List View
+struct MetricsListView: View {
+    let results: AssessmentResult
     
     var body: some View {
         VStack(spacing: 8) {
-            ForEach(Array(zip(data, labels).enumerated()), id: \.offset) { index, item in
-                HStack {
-                    Text(item.1)
-                        .font(.caption)
-                        .frame(width: 60, alignment: .leading)
-                    
-                    GeometryReader { geometry in
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.accentColor)
-                            .frame(width: geometry.size.width * item.0)
-                    }
-                    .frame(height: 20)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(4)
-                    
-                    Text("\(Int(item.0 * 100))%")
-                        .font(.caption)
-                        .frame(width: 40, alignment: .trailing)
-                }
-            }
+            RadarMetricRow(name: "Range of Motion", score: results.rangeOfMotionScore, color: .electricGreen)
+            RadarMetricRow(name: "Flexibility", score: results.flexibilityScore, color: .electricGreen)
+            RadarMetricRow(name: "Mobility", score: results.mobilityScore, color: .electricGreen)
+            RadarMetricRow(name: "Functional Strength", score: results.functionalStrengthScore, color: .orange)
+            RadarMetricRow(name: "Aerobic Capacity", score: results.aerobicCapacityScore, color: .yellow)
         }
-        .padding()
+    }
+}
+
+struct RadarMetricRow: View {
+    let name: String
+    let score: Double
+    let color: Color
+    
+    var body: some View {
+        HStack {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            
+            Text(name)
+                .font(.caption)
+                .foregroundColor(.lightText)
+            
+            Spacer()
+            
+            Text("\(Int(score * 100))%")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(color)
+        }
     }
 }
 
@@ -74,12 +250,14 @@ struct SimpleMetricsChart: View {
             profileId: "test-profile-id",
             bodyArea: "Overall", 
             durabilityScore: 0.75,
-            rangeOfMotionScore: 0.8, 
-            flexibilityScore: 0.6, 
-            functionalStrengthScore: 0.9,
-            mobilityScore: 0.7, 
-            aerobicCapacityScore: 0.85
+            rangeOfMotionScore: 0.78, 
+            flexibilityScore: 0.72, 
+            functionalStrengthScore: 0.82,
+            mobilityScore: 0.75, 
+            aerobicCapacityScore: 0.68
         )
     )
+    .padding()
+    .background(Color.darkSpaceGrey)
 }
 
