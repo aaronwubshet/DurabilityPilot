@@ -168,6 +168,10 @@ class HealthKitService: ObservableObject {
         isAuthorized = allReadAuthorized && allWriteAuthorized
     }
     
+    func updateAuthorizationStatus() {
+        checkAuthorizationStatus()
+    }
+    
     func fetchTodayHealthData() async {
         guard isAuthorized else { 
                     return

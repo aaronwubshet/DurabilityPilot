@@ -1,12 +1,13 @@
 import SwiftUI
+import HealthKit
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
     @State private var showingRetakeAlert = false
     @State private var showingLatestResults = false
+    @State private var showingHealthKitSettingsAlert = false
     @State private var notificationsEnabled = true
-    @State private var healthKitEnabled = true
     @State private var latestAssessmentResults: [AssessmentResult] = []
     @State private var isLoadingResults = false
     
@@ -41,7 +42,11 @@ struct ProfileView: View {
                     // Settings Card
                     SettingsCard(
                         notificationsEnabled: $notificationsEnabled,
-                        healthKitEnabled: $healthKitEnabled
+                        onHealthKitTap: {
+                            Task {
+                                await requestHealthKitPermissions()
+                            }
+                        }
                     )
                     
                     // Account Card
@@ -71,6 +76,16 @@ struct ProfileView: View {
                 }
             } message: {
                 Text("This will start a new movement assessment. Your previous assessment results will be preserved, but you'll need to complete the full assessment again.")
+            }
+            .alert("HealthKit Permissions", isPresented: $showingHealthKitSettingsAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Open Settings") {
+                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(settingsUrl)
+                    }
+                }
+            } message: {
+                Text("To manage HealthKit permissions, please go to Settings > Privacy & Security > Health > Durability and adjust which data types you'd like to share.")
             }
             .sheet(isPresented: $showingLatestResults) {
                 AssessmentResultsView(
@@ -140,6 +155,57 @@ struct ProfileView: View {
             await MainActor.run {
                 latestAssessmentResults = []
                 isLoadingResults = false
+            }
+        }
+    }
+    
+    /// Request HealthKit permissions - this will show the native Apple HealthKit authorization dialog
+    /// or direct users to Settings if permissions have already been requested
+    private func requestHealthKitPermissions() async {
+        // Check if HealthKit is available
+        guard HKHealthStore.isHealthDataAvailable() else {
+            print("HealthKit is not available on this device")
+            return
+        }
+        
+        // Check current authorization status
+        let healthStore = HKHealthStore()
+        let readTypes = Config.healthKitReadTypes
+        let writeTypes = Config.healthKitWriteTypes
+        
+        // Check if any permissions have already been requested
+        var hasRequestedPermissions = false
+        for readType in readTypes {
+            let status = healthStore.authorizationStatus(for: readType)
+            if status != .notDetermined {
+                hasRequestedPermissions = true
+                break
+            }
+        }
+        
+        for writeType in writeTypes {
+            let status = healthStore.authorizationStatus(for: writeType)
+            if status != .notDetermined {
+                hasRequestedPermissions = true
+                break
+            }
+        }
+        
+        if hasRequestedPermissions {
+            // Permissions have already been requested, direct to Settings
+            await MainActor.run {
+                showingHealthKitSettingsAlert = true
+            }
+        } else {
+            // First time requesting permissions, show the native dialog
+            let granted = await appState.healthKitService.requestAuthorization()
+            
+            if granted {
+                // Update health data if authorization was granted
+                await appState.healthKitService.fetchTodayHealthData()
+                
+                // Optionally update the user's profile with HealthKit data
+                await appState.healthKitService.upsertProfileFromHealthData(appState: appState)
             }
         }
     }
@@ -277,7 +343,7 @@ struct QuickActionRow: View {
 // MARK: - Settings Card
 struct SettingsCard: View {
     @Binding var notificationsEnabled: Bool
-    @Binding var healthKitEnabled: Bool
+    let onHealthKitTap: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -294,11 +360,11 @@ struct SettingsCard: View {
                     isOn: $notificationsEnabled
                 )
                 
-                SettingToggleRow(
+                SettingButtonRow(
                     icon: "heart.fill",
                     title: "HealthKit",
-                    description: "Sync with Apple Health",
-                    isOn: $healthKitEnabled
+                    description: "Manage Apple Health permissions",
+                    onTap: onHealthKitTap
                 )
             }
         }
@@ -348,6 +414,52 @@ struct SettingToggleRow: View {
                 .labelsHidden()
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Setting Button Row
+struct SettingButtonRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color.electricGreen)
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+                
+                // Text
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondaryText)
+                }
+                
+                Spacer()
+                
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondaryText)
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

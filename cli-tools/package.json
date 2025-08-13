@@ -1,0 +1,36 @@
+{
+  "name": "durability-cli-tools",
+  "version": "1.0.0",
+  "description": "CLI tools for Durability app plan scoring via Supabase Edge Functions",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "compute-scores": "node scripts/compute-plan-scores.js",
+    "test": "node scripts/test-edge-function.js",
+    "deploy": "supabase functions deploy compute-plan-scores",
+    "extract-schema": "node scripts/extract-schema.js",
+    "generate-markdown": "node scripts/generate-markdown-schema.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "supabase": "^2.34.3"
+  },
+  "keywords": [
+    "durability",
+    "supabase",
+    "edge-functions",
+    "fitness",
+    "scoring"
+  ],
+  "author": "Aaron Wubshet",
+  "license": "MIT"
+}
+
