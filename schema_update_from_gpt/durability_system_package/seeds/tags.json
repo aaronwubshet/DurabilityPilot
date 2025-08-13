@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Bodyweight",
+    "category": "Equipment"
+  },
+  {
+    "name": "Barbell",
+    "category": "Equipment"
+  },
+  {
+    "name": "Beginner",
+    "category": "Difficulty"
+  },
+  {
+    "name": "Intermediate",
+    "category": "Difficulty"
+  },
+  {
+    "name": "Advanced",
+    "category": "Difficulty"
+  }
+]

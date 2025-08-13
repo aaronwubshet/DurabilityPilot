@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Total Volume",
+    "description": "Weight x reps summed"
+  },
+  {
+    "name": "Durability Score",
+    "description": "Composite recovery/resilience metric"
+  }
+]

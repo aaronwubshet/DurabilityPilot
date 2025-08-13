@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Weight",
+    "unit": "kg",
+    "description": "Load used in strength exercises"
+  },
+  {
+    "name": "Reps",
+    "unit": "count",
+    "description": "Repetitions performed"
+  },
+  {
+    "name": "Duration",
+    "unit": "seconds",
+    "description": "Time duration"
+  },
+  {
+    "name": "Heart Rate",
+    "unit": "bpm",
+    "description": "Beats per minute"
+  }
+]

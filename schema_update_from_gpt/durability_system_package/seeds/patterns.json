@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Squat",
+    "pattern_type": "Strength",
+    "description": "Lower body knee-dominant movement"
+  },
+  {
+    "name": "Hinge",
+    "pattern_type": "Strength",
+    "description": "Hip-dominant movement"
+  },
+  {
+    "name": "Lunge",
+    "pattern_type": "Strength",
+    "description": "Split stance lower body movement"
+  },
+  {
+    "name": "Push",
+    "pattern_type": "Strength",
+    "description": "Upper body pushing"
+  },
+  {
+    "name": "Pull",
+    "pattern_type": "Strength",
+    "description": "Upper body pulling"
+  },
+  {
+    "name": "Carry",
+    "pattern_type": "Strength",
+    "description": "Loaded carry pattern"
+  },
+  {
+    "name": "Rotation",
+    "pattern_type": "Stability",
+    "description": "Core rotation pattern"
+  },
+  {
+    "name": "Anti-Rotation",
+    "pattern_type": "Stability",
+    "description": "Core resisting rotation"
+  },
+  {
+    "name": "Gait",
+    "pattern_type": "Endurance",
+    "description": "Locomotion pattern"
+  },
+  {
+    "name": "Flexion/Extension",
+    "pattern_type": "Mobility",
+    "description": "Joint range flexion/extension"
+  }
+]

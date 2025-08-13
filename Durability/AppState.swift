@@ -46,18 +46,15 @@ class AppState: ObservableObject {
     init() {
         Task {
             isLoading = true
-            print("🔍 AppState: Initializing...")
             
             // Wait for AuthService to check for existing session
             await authService.restoreSession()
             
             // Check if user is already authenticated
             if let user = authService.user {
-                print("🔍 AppState: User authenticated, loading profile...")
                 isAuthenticated = true
                 await loadUserProfileFromDatabase(userId: user.id.uuidString)
             } else {
-                print("🔍 AppState: No authenticated user, starting fresh...")
                 // No authenticated user - start fresh
                 isAuthenticated = false
                 currentUser = nil
@@ -107,8 +104,6 @@ class AppState: ObservableObject {
                 } else {
                     self.appFlowState = .mainApp
                 }
-                
-                print("🔍 AppState: Loaded profile - onboardingCompleted: \(profile.onboardingCompleted), assessmentCompleted: \(profile.assessmentCompleted)")
             }
             
         case .failure(let error, _, _):

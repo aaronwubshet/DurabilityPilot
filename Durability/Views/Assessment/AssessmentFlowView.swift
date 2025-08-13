@@ -165,13 +165,11 @@ class AssessmentViewModel: ObservableObject {
                 
                 if let profile = updatedProfile {
                     try await appState.profileService.updateProfile(profile)
-                    print("🔍 AssessmentFlowView: Profile updated with assessmentCompleted: \(profile.assessmentCompleted)")
                     
                     // Update app state to move to main app
                     await MainActor.run {
                         appState.currentUser = profile
                         appState.appFlowState = .mainApp
-                        print("🔍 AssessmentFlowView: Set appState.assessmentCompleted = true")
                     }
                 }
             } catch {

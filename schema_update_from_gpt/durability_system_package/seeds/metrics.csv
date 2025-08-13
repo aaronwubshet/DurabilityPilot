@@ -1,0 +1,5 @@
+name,unit,description
+Weight,kg,Load used in strength exercises
+Reps,count,Repetitions performed
+Duration,seconds,Time duration
+Heart Rate,bpm,Beats per minute
