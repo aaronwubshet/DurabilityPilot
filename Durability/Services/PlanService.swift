@@ -122,7 +122,7 @@ class PlanService: ObservableObject {
         let movementCount = Int.random(in: 3...6)
         var movements: [DailyWorkoutMovement] = []
         
-        let availableMovements = getAvailableMovements()
+        let availableMovements = await getAvailableMovements()
         
         for i in 0..<movementCount {
             let randomMovement = availableMovements.randomElement()!
@@ -151,8 +151,22 @@ class PlanService: ObservableObject {
         return movements
     }
     
-    private func getAvailableMovements() -> [Movement] {
-        // Return a list of available movements
+    private func getAvailableMovements() async -> [Movement] {
+        // Try to fetch from adapter view first
+        do {
+            let response: [Movement] = try await supabase
+                .from("movement_library")
+                .select("*")
+                .limit(100)
+                .execute()
+                .value
+            if !response.isEmpty {
+                return response
+            }
+        } catch {
+            // Fallback to hardcoded list below
+        }
+        // Fallback: minimal static set
         return [
             Movement(id: 1, name: "Squat", description: "Basic squat movement", videoURL: nil, jointsImpacted: ["ankle", "knee", "hip"], musclesImpacted: ["quad", "glute"], superMetricsImpacted: ["functional_strength"], sportsImpacted: ["Soccer", "Basketball"], intensityOptions: ["reps", "weight"], recoveryImpactScore: 0.3, resilienceImpactScore: 0.7, resultsImpactScore: 0.8),
             Movement(id: 2, name: "Deadlift", description: "Hip hinge movement", videoURL: nil, jointsImpacted: ["hip", "knee"], musclesImpacted: ["hamstring", "glute"], superMetricsImpacted: ["functional_strength"], sportsImpacted: ["Football"], intensityOptions: ["reps", "weight"], recoveryImpactScore: 0.2, resilienceImpactScore: 0.8, resultsImpactScore: 0.9),

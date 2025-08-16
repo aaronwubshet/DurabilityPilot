@@ -10,7 +10,8 @@
     "test": "node scripts/test-edge-function.js",
     "deploy": "supabase functions deploy compute-plan-scores",
     "extract-schema": "node scripts/extract-schema.js",
-    "generate-markdown": "node scripts/generate-markdown-schema.js"
+    "generate-markdown": "node scripts/generate-markdown-schema.js",
+    "seed-library": "node scripts/load-library-seeds.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

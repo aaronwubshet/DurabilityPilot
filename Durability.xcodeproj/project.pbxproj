@@ -281,6 +281,7 @@
 				DEVELOPMENT_TEAM = 67AH4PN566;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Durability uses the camera to record your movement assessment video.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Durability reads your steps, heart rate, height, and weight to personalize recommendations and track progress.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Durability writes activity data like steps and active energy to the Health app when you log workouts.";
@@ -316,6 +317,7 @@
 				DEVELOPMENT_TEAM = 67AH4PN566;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Durability uses the camera to record your movement assessment video.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Durability reads your steps, heart rate, height, and weight to personalize recommendations and track progress.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Durability writes activity data like steps and active energy to the Health app when you log workouts.";

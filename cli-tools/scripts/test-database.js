@@ -1,3 +1,28 @@
+import { validateConfig, supabaseServiceClient, logger } from '../src/config.js';
+
+async function testDatabase() {
+  validateConfig();
+  if (!supabaseServiceClient) throw new Error('Service role key required');
+
+  logger.info('Testing refresh_movement_library...');
+  let { error } = await supabaseServiceClient.rpc('refresh_movement_library');
+  if (error) throw error;
+
+  logger.info('Testing sync_movements_from_library...');
+  const res = await supabaseServiceClient.rpc('sync_movements_from_library');
+  if (res.error) throw res.error;
+
+  logger.info('Querying movement_library...');
+  const { data, error: qErr } = await supabaseServiceClient.from('movement_library').select('*').limit(3);
+  if (qErr) throw qErr;
+  logger.info(`movement_library sample: ${JSON.stringify(data)}`);
+}
+
+testDatabase().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+
 #!/usr/bin/env node
 
 import { supabaseClient, validateConfig, logger } from '../src/config.js';

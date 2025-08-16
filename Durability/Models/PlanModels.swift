@@ -14,6 +14,21 @@ struct Movement: Codable, Identifiable {
     let recoveryImpactScore: Double
     let resilienceImpactScore: Double
     let resultsImpactScore: Double
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case description
+        case videoURL = "video_url"
+        case jointsImpacted = "joints_impacted"
+        case musclesImpacted = "muscles_impacted"
+        case superMetricsImpacted = "super_metrics_impacted"
+        case sportsImpacted = "sports_impacted"
+        case intensityOptions = "intensity_options"
+        case recoveryImpactScore = "recovery_impact_score"
+        case resilienceImpactScore = "resilience_impact_score"
+        case resultsImpactScore = "results_impact_score"
+    }
 }
 
 // MARK: - Plan System
