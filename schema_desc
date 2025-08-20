@@ -1,0 +1,268 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.assessment_results (
+  assessment_id integer NOT NULL,
+  profile_id uuid NOT NULL,
+  body_area text NOT NULL,
+  durability_score double precision NOT NULL,
+  range_of_motion_score double precision NOT NULL,
+  flexibility_score double precision NOT NULL,
+  functional_strength_score double precision NOT NULL,
+  mobility_score double precision NOT NULL,
+  aerobic_capacity_score double precision NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  CONSTRAINT assessment_results_pkey PRIMARY KEY (id),
+  CONSTRAINT assessment_results_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT assessment_results_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(assessment_id)
+);
+CREATE TABLE public.assessments (
+  assessment_id bigint NOT NULL DEFAULT nextval('assessments_id_seq'::regclass),
+  profile_id uuid NOT NULL,
+  video_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT assessments_pkey PRIMARY KEY (assessment_id),
+  CONSTRAINT assessments_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.body_parts (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  body_part text NOT NULL UNIQUE,
+  joint text,
+  muscle_group text,
+  tendon text,
+  CONSTRAINT body_parts_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.daily_workout_blocks (
+  daily_workout_id bigint NOT NULL,
+  block_type text NOT NULL CHECK (block_type = ANY (ARRAY['prep'::text, 'build'::text, 'capacity'::text, 'finish'::text])),
+  block_id uuid NOT NULL,
+  variant text NOT NULL DEFAULT 'base'::text CHECK (variant = ANY (ARRAY['low_impact'::text, 'base'::text, 'advanced'::text])),
+  CONSTRAINT daily_workout_blocks_pkey PRIMARY KEY (daily_workout_id, block_type),
+  CONSTRAINT daily_workout_blocks_daily_workout_id_fkey FOREIGN KEY (daily_workout_id) REFERENCES public.daily_workouts(id),
+  CONSTRAINT daily_workout_blocks_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.movement_blocks(id)
+);
+CREATE TABLE public.daily_workout_movements (
+  id bigint NOT NULL DEFAULT nextval('daily_workout_movements_id_seq'::regclass),
+  daily_workout_id bigint NOT NULL,
+  sequence integer NOT NULL,
+  status text DEFAULT 'pending'::text,
+  assigned_intensity jsonb,
+  recovery_impact_score numeric,
+  resilience_impact_score numeric,
+  results_impact_score numeric,
+  movement_id uuid NOT NULL,
+  source_movement_id uuid,
+  CONSTRAINT daily_workout_movements_pkey PRIMARY KEY (id),
+  CONSTRAINT daily_workout_movements_daily_workout_id_fkey FOREIGN KEY (daily_workout_id) REFERENCES public.daily_workouts(id),
+  CONSTRAINT daily_workout_movements_source_movement_id_fkey FOREIGN KEY (source_movement_id) REFERENCES public.movements(id),
+  CONSTRAINT daily_workout_movements_movement_id_fkey FOREIGN KEY (movement_id) REFERENCES public.movements(id)
+);
+CREATE TABLE public.daily_workouts (
+  id bigint NOT NULL DEFAULT nextval('daily_workouts_id_seq'::regclass),
+  plan_phase_id bigint NOT NULL,
+  workout_date date NOT NULL,
+  status text DEFAULT 'pending'::text,
+  CONSTRAINT daily_workouts_pkey PRIMARY KEY (id),
+  CONSTRAINT daily_workouts_plan_phase_id_fkey FOREIGN KEY (plan_phase_id) REFERENCES public.plan_phases(id)
+);
+CREATE TABLE public.equipment (
+  id integer NOT NULL DEFAULT nextval('equipment_id_seq'::regclass),
+  name text NOT NULL UNIQUE,
+  CONSTRAINT equipment_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.facilities (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  location text,
+  CONSTRAINT facilities_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.goals (
+  id integer NOT NULL DEFAULT nextval('goals_id_seq'::regclass),
+  name text NOT NULL UNIQUE,
+  CONSTRAINT goals_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.injuries (
+  id integer NOT NULL DEFAULT nextval('injuries_id_seq'::regclass),
+  name text NOT NULL UNIQUE,
+  CONSTRAINT injuries_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.movement_block_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  block_id uuid NOT NULL,
+  sequence integer NOT NULL,
+  movement_uuid uuid NOT NULL,
+  role text NOT NULL DEFAULT 'accessory'::text CHECK (role = ANY (ARRAY['primary'::text, 'accessory'::text])),
+  swap_group text,
+  variants jsonb NOT NULL,
+  cues jsonb,
+  CONSTRAINT movement_block_items_pkey PRIMARY KEY (id),
+  CONSTRAINT movement_block_items_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.movement_blocks(id),
+  CONSTRAINT movement_block_items_movement_uuid_fkey FOREIGN KEY (movement_uuid) REFERENCES public.movements(id)
+);
+CREATE TABLE public.movement_blocks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  block_type text NOT NULL CHECK (block_type = ANY (ARRAY['prep'::text, 'build'::text, 'capacity'::text, 'finish'::text])),
+  regions ARRAY DEFAULT '{}'::text[],
+  equipment ARRAY DEFAULT '{}'::text[],
+  duration_min integer NOT NULL CHECK (duration_min >= 3 AND duration_min <= 30),
+  priority smallint DEFAULT 3 CHECK (priority >= 1 AND priority <= 5),
+  requires jsonb NOT NULL DEFAULT '{}'::jsonb,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  goal_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT movement_blocks_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.movement_content (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  movement_id uuid NOT NULL,
+  locale text NOT NULL DEFAULT 'en'::text CHECK (locale ~ '^[A-Za-z]{2}(-[A-Za-z]{2})?$'::text),
+  title text,
+  short_description text,
+  long_description text,
+  coaching_cues jsonb DEFAULT '[]'::jsonb,
+  safety_notes text,
+  version integer NOT NULL DEFAULT 1,
+  is_active boolean NOT NULL DEFAULT true,
+  primary_image_path text,
+  primary_image_alt text,
+  demo_video_path text,
+  demo_video_mime text CHECK (demo_video_mime IS NULL OR (demo_video_mime = ANY (ARRAY['application/x-mpegURL'::text, 'video/mp4'::text]))),
+  thumbnail_path text,
+  gallery jsonb NOT NULL DEFAULT '[]'::jsonb,
+  captions jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT movement_content_pkey PRIMARY KEY (id),
+  CONSTRAINT movement_content_movement_id_fkey FOREIGN KEY (movement_id) REFERENCES public.movements(id)
+);
+CREATE TABLE public.movement_patterns (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  pattern_type_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT movement_patterns_pkey PRIMARY KEY (id),
+  CONSTRAINT movement_patterns_pattern_type_id_fkey FOREIGN KEY (pattern_type_id) REFERENCES public.pattern_types(id)
+);
+CREATE TABLE public.movements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  pattern_id uuid NOT NULL,
+  default_module_impact_vector jsonb NOT NULL,
+  default_sport_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  is_assessment boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  default_goal_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  default_equipment_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  default_body_part_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  default_injury_flags jsonb NOT NULL DEFAULT jsonb_build_object('indication', '[]'::jsonb, 'contraindication', '[]'::jsonb),
+  default_super_metric_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT movements_pkey PRIMARY KEY (id),
+  CONSTRAINT movements_pattern_id_fkey FOREIGN KEY (pattern_id) REFERENCES public.movement_patterns(id)
+);
+CREATE TABLE public.pattern_types (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL UNIQUE,
+  intensity_schema text NOT NULL CHECK (intensity_schema = ANY (ARRAY['strength'::text, 'aerobic'::text, 'mobility'::text, 'strength_control'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT pattern_types_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.plan_phases (
+  id bigint NOT NULL DEFAULT nextval('plan_phases_id_seq'::regclass),
+  plan_id bigint NOT NULL,
+  phase_number integer NOT NULL,
+  recovery_weight numeric NOT NULL,
+  resilience_weight numeric NOT NULL,
+  results_weight numeric NOT NULL,
+  start_date date NOT NULL,
+  end_date date NOT NULL,
+  CONSTRAINT plan_phases_pkey PRIMARY KEY (id),
+  CONSTRAINT plan_phases_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id)
+);
+CREATE TABLE public.plans (
+  id bigint NOT NULL DEFAULT nextval('plans_id_seq'::regclass),
+  profile_id uuid NOT NULL,
+  start_date date NOT NULL,
+  end_date date NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT plans_pkey PRIMARY KEY (id),
+  CONSTRAINT plans_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.profile_equipment (
+  profile_id uuid NOT NULL,
+  equipment_id integer NOT NULL,
+  reported_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profile_equipment_pkey PRIMARY KEY (profile_id, equipment_id),
+  CONSTRAINT profile_equipment_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT profile_equipment_equipment_id_fkey FOREIGN KEY (equipment_id) REFERENCES public.equipment(id)
+);
+CREATE TABLE public.profile_goals (
+  profile_id uuid NOT NULL,
+  goal_id integer NOT NULL,
+  reported_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profile_goals_pkey PRIMARY KEY (profile_id, goal_id),
+  CONSTRAINT profile_goals_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT profile_goals_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.goals(id)
+);
+CREATE TABLE public.profile_injuries (
+  profile_id uuid NOT NULL,
+  injury_id integer NOT NULL,
+  other_injury_text text,
+  is_active boolean DEFAULT true,
+  reported_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT profile_injuries_pkey PRIMARY KEY (profile_id, injury_id),
+  CONSTRAINT profile_injuries_injury_id_fkey FOREIGN KEY (injury_id) REFERENCES public.injuries(id),
+  CONSTRAINT profile_injuries_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.profile_movement_blacklist (
+  profile_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  movement_uuid uuid,
+  CONSTRAINT profile_movement_blacklist_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT profile_movement_blacklist_movement_uuid_fkey FOREIGN KEY (movement_uuid) REFERENCES public.movements(id)
+);
+CREATE TABLE public.profile_sports (
+  profile_id uuid NOT NULL,
+  sport_id integer NOT NULL,
+  reported_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profile_sports_pkey PRIMARY KEY (profile_id, sport_id),
+  CONSTRAINT profile_sports_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT profile_sports_sport_id_fkey FOREIGN KEY (sport_id) REFERENCES public.sports(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  first_name text,
+  last_name text,
+  age integer,
+  sex text,
+  height_cm numeric,
+  weight_kg numeric,
+  is_pilot boolean DEFAULT false,
+  training_plan_info text,
+  training_plan_image_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  assessment_completed boolean DEFAULT false,
+  onboarding_completed boolean DEFAULT false,
+  date_of_birth date,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.sports (
+  id integer NOT NULL DEFAULT nextval('sports_id_seq'::regclass),
+  name text NOT NULL UNIQUE,
+  CONSTRAINT sports_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.super_metrics (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  key text NOT NULL UNIQUE CHECK (key = lower(key)),
+  name text NOT NULL,
+  unit text,
+  position smallint NOT NULL DEFAULT 0,
+  CONSTRAINT super_metrics_pkey PRIMARY KEY (id)
+);

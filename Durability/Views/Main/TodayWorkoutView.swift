@@ -8,10 +8,12 @@ struct TodayWorkoutView: View {
     @State private var showRunner = false
     @State private var showAssessmentPrompt = false
     @State private var insights: [String] = []
+    @State private var showMovementLibrary = false
+    @State private var movementNameById: [Int: String] = [:]
     
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .bottomLeading) {
                 Color.darkSpaceGrey
                     .ignoresSafeArea()
                 
@@ -21,13 +23,30 @@ struct TodayWorkoutView: View {
                             ProgressView("Loading today's workout...")
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else if let workout = currentWorkout {
-                            TodayWorkoutContent(workout: workout)
+                            TodayWorkoutContent(workout: workout, movementNameById: movementNameById)
                         } else {
                             NoWorkoutView()
                         }
                     }
                     .padding()
                 }
+                
+                // Floating Button
+                Button(action: {
+                    showMovementLibrary = true
+                }) {
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .resizable()
+                        .frame(width: 48, height: 48)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                .padding(.leading, 24)
+                .padding(.bottom, 80) // Adjust as needed to sit above the tab bar
+                .accessibilityLabel("Open Movement Library")
             }
             .navigationTitle("Today's Workout")
             .toolbar {
@@ -44,45 +63,61 @@ struct TodayWorkoutView: View {
                 Task { await checkPrompts() }
             }
         }
+        .sheet(isPresented: $showMovementLibrary) {
+            MovementLibraryView()
+        }
     }
     
     private func loadTodayWorkout() {
+        print("[TodayWorkoutView] loadTodayWorkout() called")
         isLoading = true
         
         Task {
             guard let profileId = appState.currentUser?.id else {
+                print("[TodayWorkoutView] No profileId found on appState.currentUser")
                 await MainActor.run { isLoading = false }
                 return
             }
+            print("[TodayWorkoutView] Using profileId: \(profileId)")
             
             do {
-                // Get current plan and find today's workout
+                // Get current plan and pick the first available workout (no date filtering)
                 if let plan = try await appState.planService.getCurrentPlan(profileId: profileId) {
-                    let today = Date()
-                    let calendar = Calendar.current
-                    
-                    // Find today's workout across all phases
-                    for phase in plan.phases {
-                        if let todayWorkout = phase.dailyWorkouts.first(where: { workout in
-                            calendar.isDate(workout.workoutDate, inSameDayAs: today)
-                        }) {
-                            await MainActor.run {
-                                currentWorkout = todayWorkout
-                                isLoading = false
-                                insights = generateInsights(for: todayWorkout)
-                            }
-                            return
-                        }
+                    print("[TodayWorkoutView] Loaded plan id=\(plan.id), phases=\(plan.phases.count)")
+                    let allWorkouts = plan.phases.flatMap { phase in
+                        print("[TodayWorkoutView] Phase id=\(phase.id) has \(phase.dailyWorkouts.count) workouts")
+                        return phase.dailyWorkouts
                     }
+                    print("[TodayWorkoutView] Total workouts across phases: \(allWorkouts.count)")
+                    if let anyWorkout = allWorkouts.first {
+                        print("[TodayWorkoutView] Selected workout id=\(anyWorkout.id) date=\(anyWorkout.workoutDate) movements=\(anyWorkout.movements.count)")
+                        let ids = anyWorkout.movements.map { $0.movementId }
+                        print("[TodayWorkoutView] Movement IDs: \(ids)")
+                        let nameMap = (try? await appState.planService.getMovementNamesByIds(ids)) ?? [:]
+                        print("[TodayWorkoutView] Resolved movement names: \(nameMap.count)")
+                        await MainActor.run {
+                            currentWorkout = anyWorkout
+                            movementNameById = nameMap
+                            isLoading = false
+                            insights = generateInsights(for: anyWorkout)
+                        }
+                        return
+                    } else {
+                        print("[TodayWorkoutView] No workouts found in plan.phases")
+                    }
+                } else {
+                    print("[TodayWorkoutView] No current plan found for profileId: \(profileId)")
                 }
                 
-                // No workout found for today
+                // No workout found
                 await MainActor.run {
                     currentWorkout = nil
                     isLoading = false
                     insights = []
                 }
+                print("[TodayWorkoutView] Set state to no workout available")
             } catch {
+                print("[TodayWorkoutView] Error loading workout: \(error.localizedDescription)")
                 await MainActor.run {
                     isLoading = false
                     // Keep current workout if loading fails
@@ -113,6 +148,7 @@ struct TodayWorkoutView: View {
 
 struct TodayWorkoutContent: View {
     let workout: DailyWorkout
+    let movementNameById: [Int: String]
     @State private var currentMovementIndex = 0
     @State private var isRunnerPresented = false
     
@@ -137,7 +173,7 @@ struct TodayWorkoutContent: View {
             // Current movement
             if currentMovementIndex < workout.movements.count {
                 let movement = workout.movements[currentMovementIndex]
-                MovementCard(movement: movement, isActive: true)
+                MovementCard(movement: movement, isActive: true, name: movementNameById[movement.movementId])
                 
                 Button {
                     isRunnerPresented = true
@@ -162,7 +198,8 @@ struct TodayWorkoutContent: View {
                 ForEach(Array(workout.movements.enumerated()), id: \.element.id) { index, movement in
                     MovementCard(
                         movement: movement,
-                        isActive: index == currentMovementIndex
+                        isActive: index == currentMovementIndex,
+                        name: movementNameById[movement.movementId]
                     )
                 }
             }
@@ -192,6 +229,7 @@ struct TodayWorkoutContent: View {
 struct MovementCard: View {
     let movement: DailyWorkoutMovement
     let isActive: Bool
+    let name: String?
     
     var body: some View {
         HStack {
@@ -199,7 +237,7 @@ struct MovementCard: View {
                 Text("Movement \(movement.sequence)")
                     .font(.headline)
                 
-                Text("Movement \(movement.movementId)")
+                Text(name ?? "Movement \(movement.movementId)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
