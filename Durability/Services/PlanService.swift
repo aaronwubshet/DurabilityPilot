@@ -300,7 +300,7 @@ class PlanService: ObservableObject {
             .limit(1)
             .execute()
         let arr = toArray(resp.data)
-        print("[PlanService] plans raw: \(String(data: resp.data ?? Data(), encoding: .utf8) ?? "<nil>")")
+        print("[PlanService] plans raw: \(String(data: resp.data, encoding: .utf8) ?? "<nil>")")
         logArraySummary(label: "plans", data: arr)
         guard let r = arr.first else { return nil }
 
@@ -326,7 +326,7 @@ class PlanService: ObservableObject {
             .order("phase_number", ascending: true)
             .execute()
         let arr = toArray(resp.data)
-        print("[PlanService] plan_phases raw: \(String(data: resp.data ?? Data(), encoding: .utf8) ?? "<nil>")")
+        print("[PlanService] plan_phases raw: \(String(data: resp.data, encoding: .utf8) ?? "<nil>")")
         logArraySummary(label: "plan_phases", data: arr)
         var phases: [PlanPhase] = []
         for pr in arr {
@@ -357,7 +357,7 @@ class PlanService: ObservableObject {
             .order("workout_date", ascending: true)
             .execute()
         let arr = toArray(resp.data)
-        print("[PlanService] daily_workouts raw: \(String(data: resp.data ?? Data(), encoding: .utf8) ?? "<nil>")")
+        print("[PlanService] daily_workouts raw: \(String(data: resp.data, encoding: .utf8) ?? "<nil>")")
         logArraySummary(label: "daily_workouts", data: arr)
         var workouts: [DailyWorkout] = []
         for wr in arr {
@@ -384,12 +384,12 @@ class PlanService: ObservableObject {
             .order("sequence", ascending: true)
             .execute()
         let arr = toArray(resp.data)
-        print("[PlanService] daily_workout_movements raw: \(String(data: resp.data ?? Data(), encoding: .utf8) ?? "<nil>")")
+        print("[PlanService] daily_workout_movements raw: \(String(data: resp.data, encoding: .utf8) ?? "<nil>")")
         logArraySummary(label: "daily_workout_movements", data: arr)
         
         return arr.map { r in
             print("[PlanService] Mapping movement id=\(string(r, "id") ?? "<nil>") movement_id=\(string(r, "movement_id") ?? String(int(r, "movement_id") ?? 0)) seq=\(int(r, "sequence") ?? -1) status=\(string(r, "status") ?? "<nil>")")
-            DailyWorkoutMovement(
+            return DailyWorkoutMovement(
                 id: string(r, "id") ?? "",
                 dailyWorkoutId: string(r, "daily_workout_id") ?? "",
                 movementId: int(r, "movement_id") ?? 0,
