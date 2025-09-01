@@ -342,11 +342,53 @@ class PlanService: ObservableObject {
                 endDate: parseDateString(string(pr, "end_date")),
                 dailyWorkouts: []
             )
+            
+            // Check if daily workouts exist, if not create them
+            let existingWorkouts = try await getDailyWorkouts(phaseId: phase.id)
+            if existingWorkouts.isEmpty {
+                print("[PlanService] No daily workouts found for phase \(phase.id), generating them...")
+                try await generateDailyWorkouts(for: phase)
+            }
+            
             let workouts = try await getDailyWorkouts(phaseId: phase.id)
             phase.dailyWorkouts = workouts
             phases.append(phase)
         }
         return phases
+    }
+    
+    private struct DailyWorkoutInsert: Encodable {
+        let plan_phase_id: String
+        let workout_date: String
+        let status: String
+    }
+    
+    private func generateDailyWorkouts(for phase: PlanPhase) async throws {
+        let calendar = Calendar.current
+        var currentDate = phase.startDate
+        
+        // Generate daily workouts for each day in the phase
+        while currentDate <= phase.endDate {
+            // Skip weekends (Saturday = 7, Sunday = 1 in Calendar.current)
+            let weekday = calendar.component(.weekday, from: currentDate)
+            if weekday != 1 && weekday != 7 { // Skip Sunday (1) and Saturday (7)
+                let workoutData = DailyWorkoutInsert(
+                    plan_phase_id: phase.id,
+                    workout_date: Plan.dateOnlyFormatter.string(from: currentDate),
+                    status: "pending"
+                )
+                
+                try await supabase
+                    .from("daily_workouts")
+                    .insert(workoutData)
+                    .execute()
+                
+                print("[PlanService] Created daily workout for \(Plan.dateOnlyFormatter.string(from: currentDate))")
+            }
+            
+            // Move to next day
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        }
     }
     
     private func getDailyWorkouts(phaseId: String) async throws -> [DailyWorkout] {

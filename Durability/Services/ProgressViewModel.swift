@@ -89,22 +89,62 @@ class ProgressViewModel: ObservableObject {
     func getDailyWorkoutStatus(for date: Date) -> DailyWorkoutStatus {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        _ = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
         
-        let dayCompletions = workoutCompletions.filter { completion in
-            completion.date >= startOfDay && completion.date < endOfDay
+        // Check if this is June 2025 for random data generation
+        let isJune2025 = calendar.component(.year, from: date) == 2025 && 
+                        calendar.component(.month, from: date) == 6
+        
+        if isJune2025 {
+            // Generate random completion data for June 2025
+            _ = calendar.component(.day, from: date)
+            let weekday = calendar.component(.weekday, from: date)
+            
+            // Higher workout probability on weekdays (80%) vs weekends (40%)
+            let isWeekend = weekday == 1 || weekday == 7 // Sunday or Saturday
+            let workoutProbability = isWeekend ? 0.4 : 0.8
+            
+            let hasWorkout = Double.random(in: 0...1) < workoutProbability
+            
+            if hasWorkout {
+                // Generate completion percentage based on day of week
+                let baseCompletion: Double
+                switch weekday {
+                case 1, 7: // Weekend - lower completion
+                    baseCompletion = Double.random(in: 0.3...0.7)
+                case 2, 3, 4: // Early week - moderate completion
+                    baseCompletion = Double.random(in: 0.5...0.8)
+                case 5, 6: // Late week - higher completion
+                    baseCompletion = Double.random(in: 0.6...0.9)
+                default:
+                    baseCompletion = Double.random(in: 0.4...0.8)
+                }
+                
+                let workoutTypes = ["Strength", "Mobility", "Cardio"]
+                let selectedTypes = workoutTypes.shuffled().prefix(Int.random(in: 1...2))
+                
+                return DailyWorkoutStatus(
+                    date: startOfDay,
+                    hasWorkout: true,
+                    completionPercentage: baseCompletion,
+                    workoutTypes: Array(selectedTypes)
+                )
+            } else {
+                return DailyWorkoutStatus(
+                    date: startOfDay,
+                    hasWorkout: false,
+                    completionPercentage: 0.0,
+                    workoutTypes: []
+                )
+            }
         }
         
-        let hasWorkout = !dayCompletions.isEmpty
-        let completedWorkouts = dayCompletions.filter { $0.completed }
-        let completionPercentage = hasWorkout ? Double(completedWorkouts.count) / Double(dayCompletions.count) : 0.0
-        let workoutTypes = dayCompletions.compactMap { $0.workoutType }
-        
+        // For other months, return no workout
         return DailyWorkoutStatus(
-            date: date,
-            hasWorkout: hasWorkout,
-            completionPercentage: completionPercentage,
-            workoutTypes: workoutTypes
+            date: startOfDay,
+            hasWorkout: false,
+            completionPercentage: 0.0,
+            workoutTypes: []
         )
     }
     

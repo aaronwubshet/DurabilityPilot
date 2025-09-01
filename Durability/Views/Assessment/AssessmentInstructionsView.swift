@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AssessmentInstructionsView: View {
     @ObservedObject var viewModel: AssessmentViewModel
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         ScrollView {
@@ -47,19 +48,36 @@ struct AssessmentInstructionsView: View {
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(15)
                 
-                Button(action: {
-                    viewModel.beginRecording()
-                }) {
-                    HStack {
-                        Image(systemName: "video.fill")
-                        Text("Start Recording")
+                VStack(spacing: 12) {
+                    Button(action: {
+                        viewModel.beginRecording()
+                    }) {
+                        HStack {
+                            Image(systemName: "video.fill")
+                            Text("Start Recording")
+                        }
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                     }
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                    
+                    Button(action: {
+                        appState.appFlowState = .mainApp
+                    }) {
+                        Text("Back to Home")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.clear)
+                            .foregroundColor(.secondary)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.secondary, lineWidth: 1)
+                            )
+                    }
                 }
                 
                 Spacer()

@@ -7,6 +7,7 @@ struct ProfileView: View {
     @State private var showingRetakeAlert = false
     @State private var showingLatestResults = false
     @State private var showingHealthKitSettingsAlert = false
+    @State private var showingClearSessionAlert = false
     @State private var notificationsEnabled = true
     @State private var latestAssessmentResults: [AssessmentResult] = []
     @State private var isLoadingResults = false
@@ -51,7 +52,8 @@ struct ProfileView: View {
                     
                     // Account Card
                     AccountCard(
-                        onSignOut: { Task { await appState.signOut() } }
+                        onSignOut: { Task { await appState.signOut() } },
+                        onClearSession: { showingClearSessionAlert = true }
                     )
                 }
                 .padding(.horizontal, 16)
@@ -86,6 +88,16 @@ struct ProfileView: View {
                 }
             } message: {
                 Text("To manage HealthKit permissions, please go to Settings > Privacy & Security > Health > Durability and adjust which data types you'd like to share.")
+            }
+            .alert("Clear All Session Data", isPresented: $showingClearSessionAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Clear All", role: .destructive) {
+                    Task {
+                        await appState.clearAllSessionData()
+                    }
+                }
+            } message: {
+                Text("This will sign you out and clear all cached data. You'll need to sign in again.")
             }
             .sheet(isPresented: $showingLatestResults) {
                 AssessmentResultsView(
@@ -466,6 +478,7 @@ struct SettingButtonRow: View {
 // MARK: - Account Card
 struct AccountCard: View {
     let onSignOut: () -> Void
+    let onClearSession: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -506,6 +519,15 @@ struct AccountCard: View {
                         icon: "rectangle.portrait.and.arrow.right",
                         title: "Sign Out",
                         description: "Sign out of your account",
+                        isDestructive: true
+                    )
+                }
+                
+                Button(action: onClearSession) {
+                    AccountRow(
+                        icon: "trash.circle.fill",
+                        title: "Clear Session Data",
+                        description: "Clear all cached data and sign out",
                         isDestructive: true
                     )
                 }

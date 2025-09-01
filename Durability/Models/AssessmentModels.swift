@@ -22,7 +22,7 @@ struct Assessment: Codable, Identifiable {
 
 struct AssessmentResult: Codable, Identifiable {
     let id: Int? // Auto-incrementing primary key from database (optional for creation)
-    let assessmentId: Int // This should be the integer from the assessments table
+    var assessmentId: Int? // This should be the integer from the assessments table (optional for creation)
     let profileId: String // This should be the UUID from the profiles table
     let bodyArea: String
     let durabilityScore: Double
@@ -34,7 +34,7 @@ struct AssessmentResult: Codable, Identifiable {
     
     // Computed property for Identifiable conformance
     var identifier: String {
-        return "\(assessmentId)_\(bodyArea)"
+        return "\(assessmentId ?? 0)_\(bodyArea)"
     }
     
     enum CodingKeys: String, CodingKey {

@@ -37,12 +37,17 @@ struct AssessmentResultsView: View {
                     OverallScoreCard(score: overallResult.durabilityScore)
                 }
                 
-                // Personal Profile Summary
-                if let profile = summaryViewModel.userProfile {
-                    PersonalProfileCard(profile: profile)
-                }
+                // Hardcoded Profile Section
+                HardcodedProfileCard()
                 
-                // Assessment Insights
+                // Body Area Analysis
+                BodyAreaAnalysisCard(
+                    results: viewModel.assessmentResults.filter { $0.bodyArea != "Overall" },
+                    userInjuries: summaryViewModel.userInjuries,
+                    fallbackResults: summaryViewModel.getDefaultBodyAreaResults()
+                )
+                
+                // Personalized Insights
                 AssessmentInsightsCard(
                     assessmentResults: assessmentResults,
                     userInjuries: summaryViewModel.userInjuries,
@@ -50,25 +55,10 @@ struct AssessmentResultsView: View {
                     userSports: summaryViewModel.userSports
                 )
                 
-                // Training Plan Integration
-                TrainingPlanCard(trainingPlanInfo: summaryViewModel.getTrainingPlanInfo(profile: summaryViewModel.userProfile))
-                
                 // Equipment & Goals Alignment
                 EquipmentGoalsCard(
                     equipment: summaryViewModel.userEquipment,
                     goals: summaryViewModel.userGoals
-                )
-                
-                // Super Metrics Breakdown
-                if let overallResult = viewModel.assessmentResults.first(where: { $0.bodyArea == "Overall" }) {
-                    SuperMetricsCard(overallResult: overallResult)
-                }
-                
-                // Body Area Analysis
-                BodyAreaAnalysisCard(
-                    results: viewModel.assessmentResults.filter { $0.bodyArea != "Overall" },
-                    userInjuries: summaryViewModel.userInjuries,
-                    fallbackResults: summaryViewModel.getDefaultBodyAreaResults()
                 )
                 
                 // Action Buttons - Only show if not in view-only mode
@@ -80,16 +70,23 @@ struct AssessmentResultsView: View {
                                 viewModel.completeAssessment(appState: appState)
                             }) {
                                 HStack {
-                                    Image(systemName: "sparkles")
-                                    Text("Generate My Personalized Plan")
+                                    if viewModel.isCompletingAssessment {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "sparkles")
+                                    }
+                                    Text(viewModel.isCompletingAssessment ? "Generating Plan..." : "Generate My Personalized Plan")
                                 }
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(Color.accentColor)
+                                .background(viewModel.isCompletingAssessment ? Color.gray : Color.accentColor)
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
                             }
+                            .disabled(viewModel.isCompletingAssessment)
                         } else {
                             // Retake scenario - show "Start New Assessment" and "Go to Main App"
                             Button(action: {
@@ -208,10 +205,10 @@ struct OverallScoreCard: View {
     
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return Color(red: 0.043, green: 0.847, blue: 0.0) // Electric green
-        case 0.6..<0.8: return .orange
-        case 0.4..<0.6: return .yellow
-        default: return .red
+        case 0.75...: return Color(red: 0.043, green: 0.847, blue: 0.0) // Electric green (75-100)
+        case 0.5..<0.75: return .yellow     // 50-75: Yellow
+        case 0.25..<0.5: return .orange     // 25-50: Orange
+        default: return .red                 // 0-25: Red
         }
     }
     
@@ -284,6 +281,34 @@ struct ProfileRow: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
         }
+    }
+}
+
+// MARK: - Hardcoded Profile Card
+struct HardcodedProfileCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "person.circle.fill")
+                    .foregroundColor(.accentColor)
+                Text("Profile")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                ProfileRow(title: "Name", value: "Gabby Rizika")
+                ProfileRow(title: "Age", value: "28 years old")
+                ProfileRow(title: "Sex", value: "Female")
+                ProfileRow(title: "Height", value: "5'5\"")
+                ProfileRow(title: "Weight", value: "125 lbs")
+            }
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -550,10 +575,10 @@ struct MetricRow: View {
     
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return Color(red: 0.043, green: 0.847, blue: 0.0) // Electric green
-        case 0.6..<0.8: return .orange
-        case 0.4..<0.6: return .yellow
-        default: return .red
+        case 0.75...: return Color(red: 0.043, green: 0.847, blue: 0.0) // Electric green (75-100)
+        case 0.5..<0.75: return .yellow     // 50-75: Yellow
+        case 0.25..<0.5: return .orange     // 25-50: Orange
+        default: return .red                 // 0-25: Red
         }
     }
 }
@@ -588,7 +613,7 @@ struct BodyAreaAnalysisCard: View {
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
                 ForEach(displayResults, id: \.identifier) { result in
-                    BodyAreaCard(result: result, hasInjury: hasInjuryForBodyArea(result.bodyArea))
+                    BodyAreaCard(result: result)
                 }
             }
         }
@@ -598,16 +623,11 @@ struct BodyAreaAnalysisCard: View {
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
     
-    private func hasInjuryForBodyArea(_ bodyArea: String) -> Bool {
-        // In a real app, you'd map injuries to body areas
-        // For now, just check if there are any injuries
-        return !userInjuries.isEmpty
-    }
+
 }
 
 struct BodyAreaCard: View {
     let result: AssessmentResult
-    let hasInjury: Bool
     
     var body: some View {
         VStack(spacing: 8) {
@@ -617,12 +637,6 @@ struct BodyAreaCard: View {
                     .fontWeight(.semibold)
                 
                 Spacer()
-                
-                if hasInjury {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
-                        .font(.caption2)
-                }
             }
             
             Text("\(Int(result.durabilityScore * 100))%")
@@ -638,10 +652,10 @@ struct BodyAreaCard: View {
     
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return Color(red: 0.043, green: 0.847, blue: 0.0) // Electric green
-        case 0.6..<0.8: return .orange
-        case 0.4..<0.6: return .yellow
-        default: return .red
+        case 0.75...: return Color(red: 0.043, green: 0.847, blue: 0.0) // Electric green (75-100)
+        case 0.5..<0.75: return .yellow     // 50-75: Yellow
+        case 0.25..<0.5: return .orange     // 25-50: Orange
+        default: return .red                 // 0-25: Red
         }
     }
 }
@@ -785,14 +799,6 @@ class OnboardingSummaryViewModel: ObservableObject {
     
     func getDefaultBodyAreaResults() -> [AssessmentResult] {
         let defaultBodyAreas = ["Shoulder", "Torso", "Hips", "Knees", "Ankles", "Elbows"]
-        let defaultScores: [String: Double] = [
-            "Shoulder": 0.75,
-            "Torso": 0.82,
-            "Hips": 0.68,
-            "Knees": 0.71,
-            "Ankles": 0.79,
-            "Elbows": 0.73
-        ]
         
         return defaultBodyAreas.map { bodyArea in
             AssessmentResult(
@@ -800,7 +806,7 @@ class OnboardingSummaryViewModel: ObservableObject {
                 assessmentId: 1,
                 profileId: "default",
                 bodyArea: bodyArea,
-                durabilityScore: defaultScores[bodyArea] ?? 0.7,
+                durabilityScore: Double.random(in: 0.1...0.9),
                 rangeOfMotionScore: Double.random(in: 0.6...0.9),
                 flexibilityScore: Double.random(in: 0.5...0.8),
                 functionalStrengthScore: Double.random(in: 0.6...0.9),

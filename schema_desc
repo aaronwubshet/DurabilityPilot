@@ -15,8 +15,8 @@ CREATE TABLE public.assessment_results (
   updated_at timestamp with time zone DEFAULT now(),
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   CONSTRAINT assessment_results_pkey PRIMARY KEY (id),
-  CONSTRAINT assessment_results_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
-  CONSTRAINT assessment_results_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(assessment_id)
+  CONSTRAINT assessment_results_assessment_id_fkey FOREIGN KEY (assessment_id) REFERENCES public.assessments(assessment_id),
+  CONSTRAINT assessment_results_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.assessments (
   assessment_id bigint NOT NULL DEFAULT nextval('assessments_id_seq'::regclass),
@@ -25,6 +25,15 @@ CREATE TABLE public.assessments (
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT assessments_pkey PRIMARY KEY (assessment_id),
   CONSTRAINT assessments_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.block_types (
+  id smallint NOT NULL,
+  slug text NOT NULL UNIQUE CHECK (slug ~ '^[a-z]+$'::text),
+  label text NOT NULL UNIQUE,
+  render_order smallint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT block_types_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.body_parts (
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -36,12 +45,10 @@ CREATE TABLE public.body_parts (
 );
 CREATE TABLE public.daily_workout_blocks (
   daily_workout_id bigint NOT NULL,
-  block_type text NOT NULL CHECK (block_type = ANY (ARRAY['prep'::text, 'build'::text, 'capacity'::text, 'finish'::text])),
   block_id uuid NOT NULL,
   variant text NOT NULL DEFAULT 'base'::text CHECK (variant = ANY (ARRAY['low_impact'::text, 'base'::text, 'advanced'::text])),
-  CONSTRAINT daily_workout_blocks_pkey PRIMARY KEY (daily_workout_id, block_type),
-  CONSTRAINT daily_workout_blocks_daily_workout_id_fkey FOREIGN KEY (daily_workout_id) REFERENCES public.daily_workouts(id),
-  CONSTRAINT daily_workout_blocks_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.movement_blocks(id)
+  CONSTRAINT daily_workout_blocks_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.movement_blocks(id),
+  CONSTRAINT daily_workout_blocks_daily_workout_id_fkey FOREIGN KEY (daily_workout_id) REFERENCES public.daily_workouts(id)
 );
 CREATE TABLE public.daily_workout_movements (
   id bigint NOT NULL DEFAULT nextval('daily_workout_movements_id_seq'::regclass),
@@ -56,16 +63,25 @@ CREATE TABLE public.daily_workout_movements (
   source_movement_id uuid,
   CONSTRAINT daily_workout_movements_pkey PRIMARY KEY (id),
   CONSTRAINT daily_workout_movements_daily_workout_id_fkey FOREIGN KEY (daily_workout_id) REFERENCES public.daily_workouts(id),
-  CONSTRAINT daily_workout_movements_source_movement_id_fkey FOREIGN KEY (source_movement_id) REFERENCES public.movements(id),
-  CONSTRAINT daily_workout_movements_movement_id_fkey FOREIGN KEY (movement_id) REFERENCES public.movements(id)
+  CONSTRAINT daily_workout_movements_movement_id_fkey FOREIGN KEY (movement_id) REFERENCES public.movements(id),
+  CONSTRAINT daily_workout_movements_source_movement_id_fkey FOREIGN KEY (source_movement_id) REFERENCES public.movements(id)
 );
 CREATE TABLE public.daily_workouts (
   id bigint NOT NULL DEFAULT nextval('daily_workouts_id_seq'::regclass),
   plan_phase_id bigint NOT NULL,
   workout_date date NOT NULL,
   status text DEFAULT 'pending'::text,
-  CONSTRAINT daily_workouts_pkey PRIMARY KEY (id),
-  CONSTRAINT daily_workouts_plan_phase_id_fkey FOREIGN KEY (plan_phase_id) REFERENCES public.plan_phases(id)
+  CONSTRAINT daily_workouts_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.dose_metrics (
+  key text NOT NULL UNIQUE,
+  display_name text NOT NULL,
+  unit text NOT NULL,
+  description text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  CONSTRAINT dose_metrics_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.equipment (
   id integer NOT NULL DEFAULT nextval('equipment_id_seq'::regclass),
@@ -88,32 +104,33 @@ CREATE TABLE public.injuries (
   name text NOT NULL UNIQUE,
   CONSTRAINT injuries_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.modules (
+  id smallint NOT NULL,
+  key text NOT NULL UNIQUE CHECK (key = lower(key)),
+  name text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT modules_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.movement_block_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   block_id uuid NOT NULL,
   sequence integer NOT NULL,
   movement_uuid uuid NOT NULL,
-  role text NOT NULL DEFAULT 'accessory'::text CHECK (role = ANY (ARRAY['primary'::text, 'accessory'::text])),
-  swap_group text,
-  variants jsonb NOT NULL,
-  cues jsonb,
   CONSTRAINT movement_block_items_pkey PRIMARY KEY (id),
-  CONSTRAINT movement_block_items_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.movement_blocks(id),
-  CONSTRAINT movement_block_items_movement_uuid_fkey FOREIGN KEY (movement_uuid) REFERENCES public.movements(id)
+  CONSTRAINT movement_block_items_movement_uuid_fkey FOREIGN KEY (movement_uuid) REFERENCES public.movements(id),
+  CONSTRAINT movement_block_items_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.movement_blocks(id)
 );
 CREATE TABLE public.movement_blocks (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
-  block_type text NOT NULL CHECK (block_type = ANY (ARRAY['prep'::text, 'build'::text, 'capacity'::text, 'finish'::text])),
   regions ARRAY DEFAULT '{}'::text[],
   equipment ARRAY DEFAULT '{}'::text[],
-  duration_min integer NOT NULL CHECK (duration_min >= 3 AND duration_min <= 30),
-  priority smallint DEFAULT 3 CHECK (priority >= 1 AND priority <= 5),
-  requires jsonb NOT NULL DEFAULT '{}'::jsonb,
-  notes text,
   created_at timestamp with time zone DEFAULT now(),
   goal_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
-  CONSTRAINT movement_blocks_pkey PRIMARY KEY (id)
+  block_type_id smallint NOT NULL,
+  CONSTRAINT movement_blocks_pkey PRIMARY KEY (id),
+  CONSTRAINT movement_blocks_block_type_id_fkey FOREIGN KEY (block_type_id) REFERENCES public.block_types(id)
 );
 CREATE TABLE public.movement_content (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -151,7 +168,7 @@ CREATE TABLE public.movements (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
   pattern_id uuid NOT NULL,
-  default_module_impact_vector jsonb NOT NULL,
+  default_module_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (json_score_object_in_range(default_module_impact_vector, '-1.0'::numeric, 1.0) AND json_keys_exist_in_modules(default_module_impact_vector)),
   default_sport_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
   is_assessment boolean NOT NULL DEFAULT false,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -161,6 +178,7 @@ CREATE TABLE public.movements (
   default_body_part_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
   default_injury_flags jsonb NOT NULL DEFAULT jsonb_build_object('indication', '[]'::jsonb, 'contraindication', '[]'::jsonb),
   default_super_metric_impact_vector jsonb NOT NULL DEFAULT '{}'::jsonb,
+  allowed_dose_metric_ids ARRAY NOT NULL DEFAULT '{}'::uuid[],
   CONSTRAINT movements_pkey PRIMARY KEY (id),
   CONSTRAINT movements_pattern_id_fkey FOREIGN KEY (pattern_id) REFERENCES public.movement_patterns(id)
 );
@@ -171,18 +189,6 @@ CREATE TABLE public.pattern_types (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT pattern_types_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.plan_phases (
-  id bigint NOT NULL DEFAULT nextval('plan_phases_id_seq'::regclass),
-  plan_id bigint NOT NULL,
-  phase_number integer NOT NULL,
-  recovery_weight numeric NOT NULL,
-  resilience_weight numeric NOT NULL,
-  results_weight numeric NOT NULL,
-  start_date date NOT NULL,
-  end_date date NOT NULL,
-  CONSTRAINT plan_phases_pkey PRIMARY KEY (id),
-  CONSTRAINT plan_phases_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.plans(id)
 );
 CREATE TABLE public.plans (
   id bigint NOT NULL DEFAULT nextval('plans_id_seq'::regclass),
@@ -206,8 +212,8 @@ CREATE TABLE public.profile_goals (
   goal_id integer NOT NULL,
   reported_at timestamp with time zone DEFAULT now(),
   CONSTRAINT profile_goals_pkey PRIMARY KEY (profile_id, goal_id),
-  CONSTRAINT profile_goals_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
-  CONSTRAINT profile_goals_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.goals(id)
+  CONSTRAINT profile_goals_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.goals(id),
+  CONSTRAINT profile_goals_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.profile_injuries (
   profile_id uuid NOT NULL,
@@ -216,23 +222,23 @@ CREATE TABLE public.profile_injuries (
   is_active boolean DEFAULT true,
   reported_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT profile_injuries_pkey PRIMARY KEY (profile_id, injury_id),
-  CONSTRAINT profile_injuries_injury_id_fkey FOREIGN KEY (injury_id) REFERENCES public.injuries(id),
-  CONSTRAINT profile_injuries_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+  CONSTRAINT profile_injuries_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT profile_injuries_injury_id_fkey FOREIGN KEY (injury_id) REFERENCES public.injuries(id)
 );
 CREATE TABLE public.profile_movement_blacklist (
   profile_id uuid NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   movement_uuid uuid,
-  CONSTRAINT profile_movement_blacklist_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
-  CONSTRAINT profile_movement_blacklist_movement_uuid_fkey FOREIGN KEY (movement_uuid) REFERENCES public.movements(id)
+  CONSTRAINT profile_movement_blacklist_movement_uuid_fkey FOREIGN KEY (movement_uuid) REFERENCES public.movements(id),
+  CONSTRAINT profile_movement_blacklist_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.profile_sports (
   profile_id uuid NOT NULL,
   sport_id integer NOT NULL,
   reported_at timestamp with time zone DEFAULT now(),
   CONSTRAINT profile_sports_pkey PRIMARY KEY (profile_id, sport_id),
-  CONSTRAINT profile_sports_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
-  CONSTRAINT profile_sports_sport_id_fkey FOREIGN KEY (sport_id) REFERENCES public.sports(id)
+  CONSTRAINT profile_sports_sport_id_fkey FOREIGN KEY (sport_id) REFERENCES public.sports(id),
+  CONSTRAINT profile_sports_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,

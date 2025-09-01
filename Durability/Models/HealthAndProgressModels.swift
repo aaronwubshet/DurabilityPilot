@@ -51,14 +51,16 @@ struct DailyWorkoutStatus {
     let workoutTypes: [String]
     
     var ringColor: Color {
-        if completionPercentage >= 1.0 {
-            return .electricGreen
-        } else if completionPercentage >= 0.7 {
-            return .orange
+        if completionPercentage >= 0.8 {
+            return .green // 80-100%
+        } else if completionPercentage >= 0.6 {
+            return .yellow // 60-80%
         } else if completionPercentage >= 0.4 {
-            return .yellow
+            return .orange // 40-60%
+        } else if completionPercentage > 0.0 {
+            return .red // <40%
         } else {
-            return .gray
+            return .gray // No workout
         }
     }
 }

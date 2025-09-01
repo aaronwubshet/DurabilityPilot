@@ -173,10 +173,10 @@ struct DataPoint: View {
     
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return .green
-        case 0.6..<0.8: return .yellow
-        case 0.4..<0.6: return .orange
-        default: return .red
+        case 0.75...: return .green    // 75-100: Green
+        case 0.5..<0.75: return .yellow   // 50-75: Yellow
+        case 0.25..<0.5: return .orange   // 25-50: Orange
+        default: return .red              // 0-25: Red
         }
     }
     
@@ -265,10 +265,10 @@ struct RadarMetricRow: View {
     
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return .green
-        case 0.6..<0.8: return .yellow
-        case 0.4..<0.6: return .orange
-        default: return .red
+        case 0.75...: return .green    // 75-100: Green
+        case 0.5..<0.75: return .yellow   // 50-75: Yellow
+        case 0.25..<0.5: return .orange   // 25-50: Orange
+        default: return .red              // 0-25: Red
         }
     }
 }

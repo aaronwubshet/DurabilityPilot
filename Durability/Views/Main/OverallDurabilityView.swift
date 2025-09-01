@@ -42,19 +42,19 @@ struct OverallDurabilityView: View {
 
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return .green
-        case 0.6..<0.8: return .yellow
-        case 0.4..<0.6: return .orange
-        default: return .red
+        case 0.75...: return .green    // 75-100: Green
+        case 0.5..<0.75: return .yellow   // 50-75: Yellow
+        case 0.25..<0.5: return .orange   // 25-50: Orange
+        default: return .red              // 0-25: Red
         }
     }
     
     private func scoreCategory(_ score: Double) -> String {
         switch score {
-        case 0.8...: return "Excellent"
-        case 0.6..<0.8: return "Good"
-        case 0.4..<0.6: return "Fair"
-        default: return "Needs Improvement"
+        case 0.75...: return "Excellent"      // 75-100: Green
+        case 0.5..<0.75: return "Good"       // 50-75: Yellow
+        case 0.25..<0.5: return "Fair"       // 25-50: Orange
+        default: return "Needs Improvement"   // 0-25: Red
         }
     }
 }

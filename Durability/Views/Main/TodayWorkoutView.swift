@@ -3,13 +3,17 @@ import SwiftUI
 struct TodayWorkoutView: View {
     @EnvironmentObject var appState: AppState
     @Binding var showingProfile: Bool
-    @State private var currentWorkout: DailyWorkout?
-    @State private var isLoading = false
     @State private var showRunner = false
     @State private var showAssessmentPrompt = false
-    @State private var insights: [String] = []
     @State private var showMovementLibrary = false
-    @State private var movementNameById: [Int: String] = [:]
+    
+    // Computed property to get user's first name
+    private var userFirstName: String {
+        if let firstName = appState.currentUser?.firstName {
+            return firstName
+        }
+        return "there" // Fallback if no name is available
+    }
     
     var body: some View {
         NavigationStack {
@@ -19,14 +23,148 @@ struct TodayWorkoutView: View {
                 
                 ScrollView {
                     VStack(spacing: 20) {
-                        if isLoading {
-                            ProgressView("Loading today's workout...")
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        } else if let workout = currentWorkout {
-                            TodayWorkoutContent(workout: workout, movementNameById: movementNameById)
-                        } else {
-                            NoWorkoutView()
+                        // Day Theme Header
+                        VStack(spacing: 8) {
+                            // Personalized Greeting
+                            HStack {
+                                Text("Hi \(userFirstName), today's focus is \(getDayTheme().capitalized)")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                
+                                Spacer()
+                                
+                                Image(systemName: themeIcon(for: getDayTheme()))
+                                    .foregroundColor(themeColor(for: getDayTheme()))
+                                    .font(.title2)
+                            }
+                            
+                            Text(themeDescription(for: getDayTheme()))
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.leading)
                         }
+                        .padding()
+                        .background(Color.cardBackground)
+                        .cornerRadius(12)
+                        
+                        // Workout Status Header with Completion Percentage and Plan Progress
+                        HStack(spacing: 16) {
+                            // Left side: Workout progress (75% width)
+                            VStack(spacing: 12) {
+                                HStack {
+                                    Text("Not Started")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.orange)
+                                    
+                                    Spacer()
+                                    
+                                    Text("0%")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                }
+                                
+                                // Progress Bar
+                                ProgressView(value: 0, total: 100)
+                                    .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                                    .scaleEffect(x: 1, y: 2, anchor: .center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            
+                            // Right side: Plan progress tracker (25% width)
+                            VStack(spacing: 8) {
+                                Text("Plan Progress")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                                
+                                ZStack {
+                                    // Background circle
+                                    Circle()
+                                        .stroke(Color(.systemGray4), lineWidth: 4)
+                                        .frame(width: 60, height: 60)
+                                    
+                                    // Progress circle (3/7 = ~43%)
+                                    Circle()
+                                        .trim(from: 0, to: 3.0/7.0)
+                                        .stroke(Color.orange, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                                        .frame(width: 60, height: 60)
+                                        .rotationEffect(.degrees(-90))
+                                    
+                                    // Center text
+                                    VStack(spacing: 2) {
+                                        Text("3")
+                                            .font(.title2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                        Text("/7")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                            .frame(width: 80)
+                        }
+                        .padding()
+                        .background(Color.cardBackground)
+                        .cornerRadius(12)
+                        
+                        // Start Workout Button
+                        Button {
+                            showRunner = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "play.circle.fill")
+                                Text("Start Workout")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.accentColor)
+                        
+                        // Workout Structure
+                        VStack(alignment: .leading, spacing: 16) {
+                            WorkoutSection(
+                                title: "Warm Up",
+                                subtitle: "Warm up and prepare your body",
+                                movements: [
+                                    PlaceholderMovement(name: "Dynamic Stretching", description: "5-10 minutes", icon: "figure.walk"),
+                                    PlaceholderMovement(name: "Mobility Work", description: "Joint preparation", icon: "figure.flexibility")
+                                ]
+                            )
+                            
+                            WorkoutSection(
+                                title: "Strength & Conditioning",
+                                subtitle: "Primary strength movements",
+                                movements: [
+                                    PlaceholderMovement(name: "Compound Movement", description: "3-4 sets", icon: "figure.strengthtraining.traditional"),
+                                    PlaceholderMovement(name: "Accessory Work", description: "2-3 sets", icon: "dumbbell.fill")
+                                ]
+                            )
+                            
+                            WorkoutSection(
+                                title: "Aerobic",
+                                subtitle: "Endurance and conditioning",
+                                movements: [
+                                    PlaceholderMovement(name: "Cardio Circuit", description: "10-15 minutes", icon: "heart.fill"),
+                                    PlaceholderMovement(name: "Interval Training", description: "Work/rest cycles", icon: "timer")
+                                ]
+                            )
+                            
+                            WorkoutSection(
+                                title: "Cool Down",
+                                subtitle: "Cool down and recovery",
+                                movements: [
+                                    PlaceholderMovement(name: "Static Stretching", description: "5-10 minutes", icon: "figure.mind.and.body"),
+                                    PlaceholderMovement(name: "Recovery Protocol", description: "Foam rolling", icon: "figure.rolling")
+                                ]
+                            )
+                        }
+                        
+                        Spacer()
                     }
                     .padding()
                 }
@@ -59,232 +197,163 @@ struct TodayWorkoutView: View {
                 }
             }
             .onAppear {
-                loadTodayWorkout()
-                Task { await checkPrompts() }
+                // No database operations needed for now
             }
         }
         .sheet(isPresented: $showMovementLibrary) {
             MovementLibraryView()
         }
+        .sheet(isPresented: $showRunner) {
+            // For now, show a placeholder since we don't have real workout data
+            Text("Workout Runner - Coming Soon")
+                .font(.title)
+                .padding()
+        }
     }
     
-    private func loadTodayWorkout() {
-        print("[TodayWorkoutView] loadTodayWorkout() called")
-        isLoading = true
+    // MARK: - Theme Helper Functions
+    
+    private func getDayTheme() -> String {
+        // For now, cycle through themes based on day of week
+        // In a real app, this would come from the user's training plan
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
         
-        Task {
-            guard let profileId = appState.currentUser?.id else {
-                print("[TodayWorkoutView] No profileId found on appState.currentUser")
-                await MainActor.run { isLoading = false }
-                return
-            }
-            print("[TodayWorkoutView] Using profileId: \(profileId)")
-            
-            do {
-                // Get current plan and pick the first available workout (no date filtering)
-                if let plan = try await appState.planService.getCurrentPlan(profileId: profileId) {
-                    print("[TodayWorkoutView] Loaded plan id=\(plan.id), phases=\(plan.phases.count)")
-                    let allWorkouts = plan.phases.flatMap { phase in
-                        print("[TodayWorkoutView] Phase id=\(phase.id) has \(phase.dailyWorkouts.count) workouts")
-                        return phase.dailyWorkouts
-                    }
-                    print("[TodayWorkoutView] Total workouts across phases: \(allWorkouts.count)")
-                    if let anyWorkout = allWorkouts.first {
-                        print("[TodayWorkoutView] Selected workout id=\(anyWorkout.id) date=\(anyWorkout.workoutDate) movements=\(anyWorkout.movements.count)")
-                        let ids = anyWorkout.movements.map { $0.movementId }
-                        print("[TodayWorkoutView] Movement IDs: \(ids)")
-                        let nameMap = (try? await appState.planService.getMovementNamesByIds(ids)) ?? [:]
-                        print("[TodayWorkoutView] Resolved movement names: \(nameMap.count)")
-                        await MainActor.run {
-                            currentWorkout = anyWorkout
-                            movementNameById = nameMap
-                            isLoading = false
-                            insights = generateInsights(for: anyWorkout)
-                        }
-                        return
-                    } else {
-                        print("[TodayWorkoutView] No workouts found in plan.phases")
-                    }
-                } else {
-                    print("[TodayWorkoutView] No current plan found for profileId: \(profileId)")
-                }
-                
-                // No workout found
-                await MainActor.run {
-                    currentWorkout = nil
-                    isLoading = false
-                    insights = []
-                }
-                print("[TodayWorkoutView] Set state to no workout available")
-            } catch {
-                print("[TodayWorkoutView] Error loading workout: \(error.localizedDescription)")
-                await MainActor.run {
-                    isLoading = false
-                    // Keep current workout if loading fails
-                }
-            }
-        }
-    }
-
-    private func checkPrompts() async {
-        guard let profileId = appState.currentUser?.id else { return }
-        // Prompt to retake assessment after 7 completed days in last 7 days
-        if let count = try? await appState.planService.countCompletedWorkouts(profileId: profileId, since: Calendar.current.date(byAdding: .day, value: -7, to: Date())!), count >= 7 {
-            await MainActor.run { showAssessmentPrompt = true }
+        switch weekday {
+        case 1, 4, 7: // Sunday, Wednesday, Saturday
+            return "recovery"
+        case 2, 5: // Monday, Thursday
+            return "resilience"
+        case 3, 6: // Tuesday, Friday
+            return "results"
+        default:
+            return "recovery"
         }
     }
     
-    private func generateInsights(for workout: DailyWorkout) -> [String] {
-        // Very simple heuristics for demo purposes
-        let hasStrength = workout.movements.contains { $0.resultsImpactScore > 0.6 }
-        let hasRecovery = workout.movements.contains { $0.recoveryImpactScore > 0.6 }
-        var tips: [String] = []
-        if hasStrength { tips.append("Brace your core; imagine pulling the floor apart with your feet.") }
-        if hasRecovery { tips.append("Move deliberately; breathe in through the nose, out through the mouth.") }
-        tips.append("Watch for asymmetry: keep hips level and knees tracking over toes.")
-        return tips
+    private func themeIcon(for theme: String) -> String {
+        switch theme {
+        case "recovery":
+            return "heart.fill"
+        case "resilience":
+            return "shield.fill"
+        case "results":
+            return "target"
+        default:
+            return "heart.fill"
+        }
+    }
+    
+    private func themeColor(for theme: String) -> Color {
+        switch theme {
+        case "recovery":
+            return .blue
+        case "resilience":
+            return .green
+        case "results":
+            return .orange
+        default:
+            return .blue
+        }
+    }
+    
+    private func themeDescription(for theme: String) -> String {
+        switch theme {
+        case "recovery":
+            return "Focus on active recovery, mobility work, and tissue quality to support your overall training."
+        case "resilience":
+            return "Build foundational strength and movement patterns to improve your durability and resilience."
+        case "results":
+            return "High-intensity training focused on performance gains and pushing your limits."
+        default:
+            return "Focus on active recovery, mobility work, and tissue quality to support your overall training."
+        }
     }
 }
 
-struct TodayWorkoutContent: View {
-    let workout: DailyWorkout
-    let movementNameById: [Int: String]
-    @State private var currentMovementIndex = 0
-    @State private var isRunnerPresented = false
+
+
+struct WorkoutSection: View {
+    let title: String
+    let subtitle: String
+    let movements: [PlaceholderMovement]
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Workout status
+        VStack(alignment: .leading, spacing: 12) {
+            // Section Header
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Movement Cards
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
+                ForEach(movements, id: \.name) { movement in
+                    PlaceholderMovementCard(movement: movement)
+                }
+            }
+        }
+        .padding()
+        .background(Color.cardBackground)
+        .cornerRadius(12)
+    }
+}
+
+struct PlaceholderMovement {
+    let name: String
+    let description: String
+    let icon: String
+}
+
+struct PlaceholderMovementCard: View {
+    let movement: PlaceholderMovement
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Workout Status:")
-                    .font(.headline)
+                Image(systemName: movement.icon)
+                    .font(.title2)
+                    .foregroundColor(.accentColor)
                 
                 Spacer()
                 
-                Text(workout.status.rawValue.capitalized)
-                    .font(.subheadline)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(statusColor.opacity(0.2))
-                    .foregroundColor(statusColor)
-                    .cornerRadius(8)
-            }
-            
-            // Current movement
-            if currentMovementIndex < workout.movements.count {
-                let movement = workout.movements[currentMovementIndex]
-                MovementCard(movement: movement, isActive: true, name: movementNameById[movement.movementId])
-                
-                Button {
-                    isRunnerPresented = true
-                } label: {
-                    HStack {
-                        Image(systemName: "play.circle.fill")
-                        Text("Start Workout")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.accentColor)
-                .padding(.top, 4)
-            }
-            
-            // Movement list
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Today's Movements")
-                    .font(.headline)
-                
-                ForEach(Array(workout.movements.enumerated()), id: \.element.id) { index, movement in
-                    MovementCard(
-                        movement: movement,
-                        isActive: index == currentMovementIndex,
-                        name: movementNameById[movement.movementId]
-                    )
-                }
-            }
-            
-            Spacer()
-        }
-        .sheet(isPresented: $isRunnerPresented) {
-            MovementRunnerView(
-                workout: workout,
-                startIndex: currentMovementIndex,
-                onFinishMovement: { nextIndex in
-                    currentMovementIndex = nextIndex
-                }
-            )
-        }
-    }
-    
-    private var statusColor: Color {
-        switch workout.status {
-        case .pending: return .orange
-        case .inProgress: return .blue
-        case .completed: return .green
-        }
-    }
-}
-
-struct MovementCard: View {
-    let movement: DailyWorkoutMovement
-    let isActive: Bool
-    let name: String?
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text("Movement \(movement.sequence)")
-                    .font(.headline)
-                
-                Text(name ?? "Movement \(movement.movementId)")
-                    .font(.subheadline)
+                Image(systemName: "circle")
+                    .font(.caption)
                     .foregroundColor(.secondary)
-                
-                if let intensity = movement.assignedIntensity, let reps = intensity.reps, let sets = intensity.sets {
-                    Text("\(reps) reps × \(sets) sets")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
             }
             
-            Spacer()
+            Text(movement.name)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .lineLimit(2)
             
-            Image(systemName: isActive ? "play.circle.fill" : "circle")
-                .font(.title2)
-                .foregroundColor(isActive ? .accentColor : .secondary)
+            Text(movement.description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
-        .padding()
-        .background(isActive ? Color.accentColor.opacity(0.1) : Color.gray.opacity(0.1))
-        .cornerRadius(10)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemBackground))
+        .cornerRadius(8)
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(isActive ? Color.accentColor : Color.clear, lineWidth: 2)
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.systemGray4), lineWidth: 1)
         )
     }
 }
 
-struct NoWorkoutView: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "calendar.badge.plus")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            Text("No workout scheduled for today")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("Your personalized plan will be generated after completing the assessment.")
-                .font(.body)
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-    }
-}
+
 
 #Preview {
     TodayWorkoutView(showingProfile: .constant(false))
         .environmentObject(AppState())
 }
+
+

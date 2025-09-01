@@ -4,6 +4,7 @@ struct ProgressDashboardView: View {
     @StateObject private var viewModel = ProgressViewModel()
     @EnvironmentObject var appState: AppState
     @Binding var showingProfile: Bool
+    @State private var isDemoMode = false
 
     var body: some View {
         NavigationStack {
@@ -20,6 +21,13 @@ struct ProgressDashboardView: View {
                             // Durability Score Card
                             DurabilityScoreCard(score: latestResult.durabilityScore)
                             
+                            // Progress History Card (Line Chart)
+                            ProgressHistoryCard(
+                                assessmentHistory: viewModel.assessmentHistory,
+                                assessmentResultsHistory: viewModel.assessmentResultsHistory,
+                                isDemoMode: isDemoMode
+                            )
+                            
                             // Workout Completion Calendar
                             WorkoutCompletionCalendarView(viewModel: viewModel)
                             
@@ -29,17 +37,11 @@ struct ProgressDashboardView: View {
                                 history: viewModel.assessmentHistory
                             )
                             
-                            // Progress History Card
-                            ProgressHistoryCard(
-                                assessmentHistory: viewModel.assessmentHistory,
-                                assessmentResultsHistory: viewModel.assessmentResultsHistory
-                            )
-                            
-                            // Recent Assessments Card
-                            RecentAssessmentsCard(assessmentHistory: viewModel.assessmentHistory)
-                            
                             // Analytics Button
                             AnalyticsButton()
+                            
+                            // Demo Day Toggle
+                            DemoDayToggle(isDemoMode: $isDemoMode)
                             
                         } else {
                             EmptyStateView()
@@ -132,7 +134,7 @@ struct DurabilityScoreCard: View {
                     Text("\(Int(score * 100))")
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(.electricGreen)
+                        .foregroundColor(scoreColor(score))
                     
                     Text("/ 100")
                         .font(.caption)
@@ -152,7 +154,7 @@ struct DurabilityScoreCard: View {
                     Text("\(Int(score * 100))%")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.electricGreen)
+                        .foregroundColor(scoreColor(score))
                 }
                 
                 GeometryReader { geometry in
@@ -177,19 +179,19 @@ struct DurabilityScoreCard: View {
     
     private func scoreColor(_ score: Double) -> Color {
         switch score {
-        case 0.8...: return .electricGreen
-        case 0.6..<0.8: return .orange
-        case 0.4..<0.6: return .yellow
-        default: return .red
+        case 0.75...: return .electricGreen  // 75-100: Green
+        case 0.5..<0.75: return .yellow     // 50-75: Yellow
+        case 0.25..<0.5: return .orange     // 25-50: Orange
+        default: return .red                 // 0-25: Red
         }
     }
     
     private func scoreCategory(_ score: Double) -> String {
         switch score {
-        case 0.8...: return "Excellent"
-        case 0.6..<0.8: return "Good"
-        case 0.4..<0.6: return "Fair"
-        default: return "Needs Improvement"
+        case 0.75...: return "Excellent"      // 75-100: Green
+        case 0.5..<0.75: return "Good"       // 50-75: Yellow
+        case 0.25..<0.5: return "Fair"       // 25-50: Orange
+        default: return "Needs Improvement"   // 0-25: Red
         }
     }
 }
@@ -222,6 +224,7 @@ struct ProgressSuperMetricsCard: View {
 struct ProgressHistoryCard: View {
     let assessmentHistory: [Assessment]
     let assessmentResultsHistory: [AssessmentResult]
+    let isDemoMode: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -244,7 +247,8 @@ struct ProgressHistoryCard: View {
             // Standardized Line Chart
             StandardizedLineChartView(
                 data: getChartData(),
-                title: "Durability Score"
+                title: "Durability Score",
+                isDemoMode: isDemoMode
             )
         }
         .padding(20)
@@ -272,6 +276,36 @@ struct ProgressHistoryCard: View {
     }
     
     private func getChartData() -> [ChartDataPoint] {
+        if isDemoMode {
+            return getDemoChartData()
+        } else {
+            return getRealChartData()
+        }
+    }
+    
+    private func getDemoChartData() -> [ChartDataPoint] {
+        // Use the specific 12-week values from the image
+        let demoValues = [23.0, 28.0, 31.0, 39.0, 50.0, 41.0, 59.0, 64.0, 79.0, 72.0, 85.0, 88.0]
+        let calendar = Calendar.current
+        let now = Date()
+        var dataPoints: [ChartDataPoint] = []
+        
+        for (week, value) in demoValues.enumerated() {
+            let weekDate = calendar.date(byAdding: .weekOfYear, value: -11 + week, to: now) ?? now
+            
+            let dataPoint = ChartDataPoint(
+                x: Double(week),
+                y: value,
+                date: weekDate,
+                label: "Week \(week + 1)"
+            )
+            dataPoints.append(dataPoint)
+        }
+        
+        return dataPoints
+    }
+    
+    private func getRealChartData() -> [ChartDataPoint] {
         // Create data points with dates
         var dataPoints: [ChartDataPoint] = []
         
@@ -420,53 +454,47 @@ struct AnalyticsButton: View {
 // MARK: - Workout Completion Calendar View
 struct WorkoutCompletionCalendarView: View {
     @ObservedObject var viewModel: ProgressViewModel
-    @State private var selectedMonth = Date()
+    @State private var selectedMonth: Date = {
+        // Set default to June 2025 to show the color-coded data
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2025
+        components.month = 6
+        components.day = 1
+        return calendar.date(from: components) ?? Date()
+    }()
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
+        VStack(alignment: .leading, spacing: 12) {
+            // Month selector
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Workout Completion")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.lightText)
-                    
-                    Text("Track your daily workout progress")
-                        .font(.caption)
-                        .foregroundColor(.secondaryText)
-                }
+                Text(selectedMonth, style: .date)
+                    .font(.headline)
+                    .fontWeight(.semibold)
                 
                 Spacer()
                 
-                // Month navigation
-                HStack(spacing: 12) {
-                    Button(action: previousMonth) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.electricGreen)
-                    }
-                    
-                    Text(monthYearString)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.lightText)
-                    
-                    Button(action: nextMonth) {
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.electricGreen)
-                    }
+                Button(action: previousMonth) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.accentColor)
+                }
+                
+                Button(action: nextMonth) {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.accentColor)
                 }
             }
+            .padding(.horizontal)
             
             // Calendar grid
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 8) {
                 // Day headers
                 ForEach(Array(["S", "M", "T", "W", "T", "F", "S"].enumerated()), id: \.offset) { index, day in
                     Text(day)
                         .font(.caption2)
                         .fontWeight(.medium)
                         .foregroundColor(.secondaryText)
-                        .frame(height: 24)
+                        .frame(height: 20)
                 }
                 
                 // Calendar days
@@ -479,12 +507,23 @@ struct WorkoutCompletionCalendarView: View {
                         )
                     } else {
                         Color.clear
-                            .frame(height: 32)
+                            .frame(height: 40)
                     }
                 }
             }
+            .padding(.horizontal)
+            
+            // Color legend
+            HStack(spacing: 16) {
+                LegendItem(color: .red, text: "<40%")
+                LegendItem(color: .orange, text: "40-60%")
+                LegendItem(color: .yellow, text: "60-80%")
+                LegendItem(color: .green, text: "80-100%")
+                LegendItem(color: .gray, text: "No workout")
+            }
+            .padding(.horizontal)
         }
-        .padding(20)
+        .padding(.vertical)
         .background(Color.lightSpaceGrey)
         .cornerRadius(16)
     }
@@ -552,6 +591,12 @@ struct WorkoutDayView: View {
     
     var body: some View {
         VStack(spacing: 2) {
+            // Date number
+            Text("\(Calendar.current.component(.day, from: date))")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(isCurrentMonth ? .primary : .secondary)
+            
             // Activity ring
             ZStack {
                 // Background ring
@@ -566,17 +611,33 @@ struct WorkoutDayView: View {
                         .stroke(status.ringColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                         .frame(width: 24, height: 24)
                         .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 0.5), value: status.completionPercentage)
+                    
+                    // Center dot for completed workouts
+                    Circle()
+                        .fill(status.ringColor)
+                        .frame(width: 4, height: 4)
                 }
             }
-            
-            // Date number
-            Text("\(Calendar.current.component(.day, from: date))")
-                .font(.caption2)
-                .fontWeight(.medium)
-                .foregroundColor(isCurrentMonth ? .lightText : .secondaryText)
         }
-        .frame(height: 32)
+        .frame(height: 40)
+    }
+}
+
+// MARK: - Legend Item View
+struct LegendItem: View {
+    let color: Color
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            
+            Text(text)
+                .font(.caption2)
+                .foregroundColor(.secondaryText)
+        }
     }
 }
 
@@ -585,11 +646,44 @@ struct WorkoutDayView: View {
         .environmentObject(AppState())
 }
 
+// MARK: - Demo Day Toggle
+struct DemoDayToggle: View {
+    @Binding var isDemoMode: Bool
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Demo Day Toggle")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.lightText)
+                
+                Spacer()
+                
+                Toggle("", isOn: $isDemoMode)
+                    .toggleStyle(SwitchToggleStyle(tint: .electricGreen))
+                    .labelsHidden()
+            }
+            
+            if isDemoMode {
+                Text("Showing 12-week demo data with realistic progression")
+                    .font(.caption)
+                    .foregroundColor(.secondaryText)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .padding(16)
+        .background(Color.lightSpaceGrey)
+        .cornerRadius(12)
+    }
+}
+
 
 // MARK: - Standardized Line Chart View
 struct StandardizedLineChartView: View {
     let data: [ChartDataPoint]
     let title: String
+    let isDemoMode: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -623,12 +717,12 @@ struct StandardizedLineChartView: View {
                             StandardizedChartPoints(data: data, geometry: geometry)
                         }
                     }
-                    .frame(height: 120)
+                    .frame(height: 240)
                     
-                    // X-axis labels (dates)
+                    // X-axis labels (dates or weeks)
                     HStack {
                         ForEach(Array(data.enumerated()), id: \.offset) { index, point in
-                            Text(formatDate(point.date))
+                            Text(isDemoMode ? formatWeek(index) : formatDate(point.date))
                                 .font(.caption2)
                                 .foregroundColor(.secondaryText)
                                 .frame(maxWidth: .infinity)
@@ -644,6 +738,12 @@ struct StandardizedLineChartView: View {
         formatter.dateFormat = "MMM d"
         return formatter.string(from: date)
     }
+    
+    private func formatWeek(_ index: Int) -> String {
+        // Show every other week to give more room for labels
+        let weekNumber = index + 1
+        return weekNumber % 2 == 1 ? "W\(weekNumber)" : ""
+    }
 }
 
 struct StandardizedChartGrid: View {
@@ -651,8 +751,9 @@ struct StandardizedChartGrid: View {
     let geometry: GeometryProxy
     
     var body: some View {
-        let maxY = data.map { $0.y }.max() ?? 100
-        let minY = data.map { $0.y }.min() ?? 0
+        // Fixed y-axis range from 0 to 100
+        let maxY: Double = 100
+        let minY: Double = 0
         
         VStack(spacing: 0) {
             ForEach(0..<5, id: \.self) { index in
@@ -689,8 +790,9 @@ struct StandardizedChartLine: View {
     let geometry: GeometryProxy
     
     var body: some View {
-        let maxY = data.map { $0.y }.max() ?? 100
-        let minY = data.map { $0.y }.min() ?? 0
+        // Fixed y-axis range from 0 to 100
+        let maxY: Double = 100
+        let minY: Double = 0
         let maxX = Double(data.count - 1)
         
         // Add padding to prevent overlap with y-axis
@@ -718,8 +820,9 @@ struct StandardizedChartPoints: View {
     let geometry: GeometryProxy
     
     var body: some View {
-        let maxY = data.map { $0.y }.max() ?? 100
-        let minY = data.map { $0.y }.min() ?? 0
+        // Fixed y-axis range from 0 to 100
+        let maxY: Double = 100
+        let minY: Double = 0
         let maxX = Double(data.count - 1)
         
         // Add padding to prevent overlap with y-axis

@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @FocusState private var isTextFieldFocused: Bool
-    @State private var showingClearSessionAlert = false
     
     var body: some View {
         ZStack {
@@ -32,35 +31,6 @@ struct ContentView: View {
                 }
             }
             .background(Color.darkSpaceGrey)
-            
-            // Clear Session Button (always visible for debugging)
-            VStack {
-                HStack {
-                    Button(action: {
-                        showingClearSessionAlert = true
-                    }) {
-                        Image(systemName: "trash.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.red)
-                            .background(Color.white.opacity(0.9))
-                            .clipShape(Circle())
-                    }
-                    .padding(.leading, 20)
-                    .padding(.top, 10)
-                    Spacer()
-                }
-                Spacer()
-            }
-        }
-        .alert("Clear All Session Data", isPresented: $showingClearSessionAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Clear All", role: .destructive) {
-                Task {
-                    await appState.clearAllSessionData()
-                }
-            }
-        } message: {
-            Text("This will sign you out and clear all cached data. You'll need to sign in again.")
         }
         .onChange(of: appState.onboardingCompleted) { _, newValue in
             // Dismiss keyboard when app state changes
