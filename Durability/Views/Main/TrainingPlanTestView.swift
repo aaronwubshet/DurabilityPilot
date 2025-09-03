@@ -86,7 +86,7 @@ struct ProgramInfoView: View {
                 Text("Name: \(program.name)")
                 Text("Duration: \(program.weeks) weeks")
                 Text("Workouts per week: \(program.workoutsPerWeek)")
-                Text("Version: \(program.version)")
+                Text("Version: \(String(describing: program.version))")
                 Text("Active: \(program.isActive ? "Yes" : "No")")
             }
             .font(.subheadline)
@@ -107,8 +107,8 @@ struct WeekInfoView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text("Week: \(week.weekIndex)")
-                Text("Phase Week: \(week.phaseWeekIndex)")
-                Text("Phase ID: \(week.phaseId)")
+                Text("Phase Week: \(week.phaseWeekIndex ?? 0)")
+                Text("Phase ID: \(week.phaseId ?? "-")")
             }
             .font(.subheadline)
             
@@ -128,7 +128,7 @@ struct WorkoutInfoView: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text("Day: \(workout.dayIndex)")
-                Text("Title: \(workout.title ?? "No Title")")
+                Text("Title: \(workout.title)")
                 Text("Week ID: \(workout.weekId)")
             }
             .font(.subheadline)
@@ -158,11 +158,11 @@ struct TestButtonsView: View {
             }
             .buttonStyle(.borderedProminent)
             
-            if let program = trainingPlanService.currentProgram {
+            if trainingPlanService.currentProgram != nil {
                 Button("Fetch Week 1") {
                     Task {
                         do {
-                            try await trainingPlanService.fetchWeek(weekIndex: 1)
+                            _ = try await trainingPlanService.fetchWeek(weekIndex: 1)
                         } catch {
                             print("Error fetching week: \(error)")
                         }
@@ -173,7 +173,7 @@ struct TestButtonsView: View {
                 Button("Fetch Today's Workout") {
                     Task {
                         do {
-                            try await trainingPlanService.fetchTodayWorkout()
+                            _ = try await trainingPlanService.fetchTodayWorkout()
                         } catch {
                             print("Error fetching workout: \(error)")
                         }

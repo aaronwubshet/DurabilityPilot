@@ -1,0 +1,2648 @@
+{
+  "assessment_results": {
+    "table_name": "assessment_results",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "assessment_id",
+        "data_type": "bigint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "body_area",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "durability_score",
+        "data_type": "double precision",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 53,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "range_of_motion_score",
+        "data_type": "double precision",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 53,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "flexibility_score",
+        "data_type": "double precision",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 53,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "functional_strength_score",
+        "data_type": "double precision",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 53,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "mobility_score",
+        "data_type": "double precision",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 53,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "aerobic_capacity_score",
+        "data_type": "double precision",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 53,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 10,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 13,
+        "description": null
+      }
+    ]
+  },
+  "assessments": {
+    "table_name": "assessments",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "assessment_id",
+        "data_type": "bigint",
+        "is_nullable": "NO",
+        "column_default": "nextval('assessments_id_seq'::regclass)",
+        "character_maximum_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "video_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      }
+    ]
+  },
+  "block_types": {
+    "table_name": "block_types",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "slug",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "label",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "render_order",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      }
+    ]
+  },
+  "body_parts": {
+    "table_name": "body_parts",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "body_part",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "joint",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "muscle_group",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "tendon",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "dose_metrics": {
+    "table_name": "dose_metrics",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "key",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "display_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "unit",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "''::text",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      }
+    ]
+  },
+  "equipment": {
+    "table_name": "equipment",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('equipment_id_seq'::regclass)",
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      }
+    ]
+  },
+  "facilities": {
+    "table_name": "facilities",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "bigint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 64,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "location",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      }
+    ]
+  },
+  "goals": {
+    "table_name": "goals",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('goals_id_seq'::regclass)",
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      }
+    ]
+  },
+  "injuries": {
+    "table_name": "injuries",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('injuries_id_seq'::regclass)",
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      }
+    ]
+  },
+  "modules": {
+    "table_name": "modules",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "key",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "movement_block_items": {
+    "table_name": "movement_block_items",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "block_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "sequence",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "movement_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "default_dose",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      }
+    ]
+  },
+  "movement_blocks": {
+    "table_name": "movement_blocks",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "block_type_id",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 13,
+        "description": null
+      },
+      {
+        "column_name": "slug",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 14,
+        "description": null
+      },
+      {
+        "column_name": "required_equipment",
+        "data_type": "ARRAY",
+        "is_nullable": "NO",
+        "column_default": "'{}'::integer[]",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 15,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 16,
+        "description": null
+      }
+    ]
+  },
+  "movement_content": {
+    "table_name": "movement_content",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "movement_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "locale",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'en'::text",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "short_description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "long_description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "coaching_cues",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": "'[]'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "safety_notes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "version",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "1",
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "is_active",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "true",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 10,
+        "description": null
+      },
+      {
+        "column_name": "primary_image_path",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "primary_image_alt",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 12,
+        "description": null
+      },
+      {
+        "column_name": "demo_video_path",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 13,
+        "description": null
+      },
+      {
+        "column_name": "demo_video_mime",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 14,
+        "description": null
+      },
+      {
+        "column_name": "thumbnail_path",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 15,
+        "description": null
+      },
+      {
+        "column_name": "gallery",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'[]'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 16,
+        "description": null
+      },
+      {
+        "column_name": "captions",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'[]'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 17,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 18,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 19,
+        "description": null
+      }
+    ]
+  },
+  "movement_patterns": {
+    "table_name": "movement_patterns",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "pattern_type_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "movements": {
+    "table_name": "movements",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "pattern_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "default_module_impact_vector",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "default_sport_impact_vector",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "is_assessment",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "false",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 12,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 13,
+        "description": null
+      },
+      {
+        "column_name": "default_goal_impact_vector",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 14,
+        "description": null
+      },
+      {
+        "column_name": "default_body_part_impact_vector",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 16,
+        "description": null
+      },
+      {
+        "column_name": "default_injury_flags",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "jsonb_build_object('indication', '[]'::jsonb, 'contraindication', '[]'::jsonb)",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 17,
+        "description": null
+      },
+      {
+        "column_name": "default_super_metric_impact_vector",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 18,
+        "description": null
+      },
+      {
+        "column_name": "allowed_dose_metric_ids",
+        "data_type": "ARRAY",
+        "is_nullable": "NO",
+        "column_default": "'{}'::uuid[]",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 19,
+        "description": null
+      },
+      {
+        "column_name": "required_equipment",
+        "data_type": "ARRAY",
+        "is_nullable": "NO",
+        "column_default": "'{}'::integer[]",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 20,
+        "description": null
+      }
+    ]
+  },
+  "pattern_types": {
+    "table_name": "pattern_types",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "intensity_schema",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "profile_equipment": {
+    "table_name": "profile_equipment",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "equipment_id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "reported_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      }
+    ]
+  },
+  "profile_goals": {
+    "table_name": "profile_goals",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "goal_id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "reported_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      }
+    ]
+  },
+  "profile_injuries": {
+    "table_name": "profile_injuries",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "injury_id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "other_injury_text",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "is_active",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "true",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "reported_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      }
+    ]
+  },
+  "profile_movement_blacklist": {
+    "table_name": "profile_movement_blacklist",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "movement_uuid",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      }
+    ]
+  },
+  "profile_sports": {
+    "table_name": "profile_sports",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "profile_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "sport_id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "reported_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      }
+    ]
+  },
+  "profiles": {
+    "table_name": "profiles",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "first_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "last_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "age",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "sex",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "height_cm",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "weight_kg",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "is_pilot",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "training_plan_info",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "training_plan_image_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 10,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "timezone('utc'::text, now())",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 12,
+        "description": null
+      },
+      {
+        "column_name": "assessment_completed",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 13,
+        "description": null
+      },
+      {
+        "column_name": "onboarding_completed",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 14,
+        "description": null
+      },
+      {
+        "column_name": "date_of_birth",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 15,
+        "description": null
+      }
+    ]
+  },
+  "program_phases": {
+    "table_name": "program_phases",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "program_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "phase_index",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "weeks_count",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      }
+    ]
+  },
+  "program_weeks": {
+    "table_name": "program_weeks",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "program_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "phase_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "week_index",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "phase_week_index",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "program_workout_blocks": {
+    "table_name": "program_workout_blocks",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "program_workout_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "sequence",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "movement_block_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      }
+    ]
+  },
+  "program_workouts": {
+    "table_name": "program_workouts",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "program_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "week_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "day_index",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "programs": {
+    "table_name": "programs",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "slug",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "weeks",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "workouts_per_week",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "version",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "1",
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "is_active",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "true",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 10,
+        "description": null
+      }
+    ]
+  },
+  "sports": {
+    "table_name": "sports",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('sports_id_seq'::regclass)",
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      }
+    ]
+  },
+  "super_metrics": {
+    "table_name": "super_metrics",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "key",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "unit",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "position",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 5,
+        "description": null
+      }
+    ]
+  },
+  "user_block_items": {
+    "table_name": "user_block_items",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "user_workout_block_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "sequence",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "movement_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "movement_name_snapshot",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "planned_dose",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "base_dose_snapshot",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      }
+    ]
+  },
+  "user_programs": {
+    "table_name": "user_programs",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "program_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "program_slug_snapshot",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "program_name_snapshot",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "template_version_snapshot",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "start_date",
+        "data_type": "date",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "timezone",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'America/New_York'::text",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'planned'::text",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "workouts_per_week",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 10,
+        "description": null
+      },
+      {
+        "column_name": "notes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 12,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 13,
+        "description": null
+      }
+    ]
+  },
+  "user_set_logs": {
+    "table_name": "user_set_logs",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "user_block_item_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "set_number",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "actual_metrics",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "rpe_set",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 4,
+        "numeric_scale": 1,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "pain_score",
+        "data_type": "smallint",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "notes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "performed_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 10,
+        "description": null
+      }
+    ]
+  },
+  "user_workout_blocks": {
+    "table_name": "user_workout_blocks",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "user_workout_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "sequence",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "movement_block_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "block_name_snapshot",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "block_type_label_snapshot",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 8,
+        "description": null
+      }
+    ]
+  },
+  "user_workouts": {
+    "table_name": "user_workouts",
+    "table_type": "BASE TABLE",
+    "columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 1,
+        "description": null
+      },
+      {
+        "column_name": "user_program_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 2,
+        "description": null
+      },
+      {
+        "column_name": "week_index",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 3,
+        "description": null
+      },
+      {
+        "column_name": "day_index",
+        "data_type": "smallint",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 16,
+        "numeric_scale": 0,
+        "ordinal_position": 4,
+        "description": null
+      },
+      {
+        "column_name": "scheduled_date",
+        "data_type": "date",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 5,
+        "description": null
+      },
+      {
+        "column_name": "title_snapshot",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 6,
+        "description": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'planned'::text",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 7,
+        "description": null
+      },
+      {
+        "column_name": "rpe_session",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 4,
+        "numeric_scale": 1,
+        "ordinal_position": 8,
+        "description": null
+      },
+      {
+        "column_name": "duration_minutes_actual",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "ordinal_position": 9,
+        "description": null
+      },
+      {
+        "column_name": "user_notes",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 10,
+        "description": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 11,
+        "description": null
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()",
+        "character_maximum_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "ordinal_position": 12,
+        "description": null
+      }
+    ]
+  }
+}

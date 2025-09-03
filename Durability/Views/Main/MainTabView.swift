@@ -11,12 +11,25 @@ struct MainTabView: View {
                 .ignoresSafeArea()
             
             TabView(selection: $selectedTab) {
-                PlanView(showingProfile: $showingProfile, supabase: SupabaseManager.shared.client)
-                    .tabItem {
-                        Image(systemName: "calendar")
-                        Text("Plan")
-                    }
-                    .tag(0)
+                NavigationView {
+                    PlanView(supabase: SupabaseManager.shared.client)
+                        .navigationTitle("Plan")
+                        .navigationBarTitleDisplayMode(.large)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                NavigationLink(destination: TrainingPlanOverviewView(trainingPlanService: TrainingPlanService(supabase: SupabaseManager.shared.client))) {
+                                    Image(systemName: "list.bullet.clipboard")
+                                        .foregroundColor(.accentColor)
+                                        .accessibilityLabel("Training Plan Details")
+                                }
+                            }
+                        }
+                }
+                .tabItem {
+                    Image(systemName: "calendar")
+                    Text("Plan")
+                }
+                .tag(0)
                 
                 TodayWorkoutView(showingProfile: $showingProfile)
                     .tabItem {

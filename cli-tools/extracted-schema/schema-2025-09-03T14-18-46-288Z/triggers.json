@@ -1,0 +1,138 @@
+[
+  {
+    "trigger_name": "update_assessment_results_updated_at",
+    "table_name": "assessment_results",
+    "function_name": "update_updated_at_column",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER update_assessment_results_updated_at BEFORE UPDATE ON public.assessment_results FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  {
+    "trigger_name": "block_types_touch_updated_at",
+    "table_name": "block_types",
+    "function_name": "_touch_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER block_types_touch_updated_at BEFORE UPDATE ON public.block_types FOR EACH ROW EXECUTE FUNCTION _touch_updated_at()"
+  },
+  {
+    "trigger_name": "modules_set_updated_at",
+    "table_name": "modules",
+    "function_name": "set_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER modules_set_updated_at BEFORE UPDATE ON public.modules FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+  },
+  {
+    "trigger_name": "movement_block_items_set_updated_at",
+    "table_name": "movement_block_items",
+    "function_name": "tg_set_timestamp",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER movement_block_items_set_updated_at BEFORE UPDATE ON public.movement_block_items FOR EACH ROW EXECUTE FUNCTION tg_set_timestamp()"
+  },
+  {
+    "trigger_name": "movement_block_items_touch_block",
+    "table_name": "movement_block_items",
+    "function_name": "tg_touch_block_updated_at",
+    "enabled": "O",
+    "trigger_type": 29,
+    "trigger_definition": "CREATE TRIGGER movement_block_items_touch_block AFTER INSERT OR DELETE OR UPDATE ON public.movement_block_items FOR EACH ROW EXECUTE FUNCTION tg_touch_block_updated_at()"
+  },
+  {
+    "trigger_name": "movement_blocks_set_updated_at",
+    "table_name": "movement_blocks",
+    "function_name": "tg_set_timestamp",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER movement_blocks_set_updated_at BEFORE UPDATE ON public.movement_blocks FOR EACH ROW EXECUTE FUNCTION tg_set_timestamp()"
+  },
+  {
+    "trigger_name": "trg_movement_content_updated_at",
+    "table_name": "movement_content",
+    "function_name": "set_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER trg_movement_content_updated_at BEFORE UPDATE ON public.movement_content FOR EACH ROW EXECUTE FUNCTION library.set_updated_at()"
+  },
+  {
+    "trigger_name": "trg_movement_patterns_updated_at",
+    "table_name": "movement_patterns",
+    "function_name": "set_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER trg_movement_patterns_updated_at BEFORE UPDATE ON public.movement_patterns FOR EACH ROW EXECUTE FUNCTION library.set_updated_at()"
+  },
+  {
+    "trigger_name": "trg_movements_required_equipment_guard",
+    "table_name": "movements",
+    "function_name": "movements_required_equipment_guard",
+    "enabled": "O",
+    "trigger_type": 23,
+    "trigger_definition": "CREATE TRIGGER trg_movements_required_equipment_guard BEFORE INSERT OR UPDATE OF required_equipment ON public.movements FOR EACH ROW EXECUTE FUNCTION movements_required_equipment_guard()"
+  },
+  {
+    "trigger_name": "trg_movements_sanitize_injury_flags",
+    "table_name": "movements",
+    "function_name": "movements_sanitize_injury_flags",
+    "enabled": "O",
+    "trigger_type": 23,
+    "trigger_definition": "CREATE TRIGGER trg_movements_sanitize_injury_flags BEFORE INSERT OR UPDATE OF default_injury_flags ON public.movements FOR EACH ROW EXECUTE FUNCTION movements_sanitize_injury_flags()"
+  },
+  {
+    "trigger_name": "trg_movements_updated_at",
+    "table_name": "movements",
+    "function_name": "set_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER trg_movements_updated_at BEFORE UPDATE ON public.movements FOR EACH ROW EXECUTE FUNCTION library.set_updated_at()"
+  },
+  {
+    "trigger_name": "trg_movements_validate_dose_ids",
+    "table_name": "movements",
+    "function_name": "movements_normalize_and_validate_dose_ids",
+    "enabled": "O",
+    "trigger_type": 23,
+    "trigger_definition": "CREATE TRIGGER trg_movements_validate_dose_ids BEFORE INSERT OR UPDATE ON public.movements FOR EACH ROW EXECUTE FUNCTION movements_normalize_and_validate_dose_ids()"
+  },
+  {
+    "trigger_name": "trg_movements_validate_super_metric_vector",
+    "table_name": "movements",
+    "function_name": "movements_validate_super_metric_vector",
+    "enabled": "O",
+    "trigger_type": 23,
+    "trigger_definition": "CREATE TRIGGER trg_movements_validate_super_metric_vector BEFORE INSERT OR UPDATE OF default_super_metric_impact_vector ON public.movements FOR EACH ROW EXECUTE FUNCTION movements_validate_super_metric_vector()"
+  },
+  {
+    "trigger_name": "trg_pattern_types_updated_at",
+    "table_name": "pattern_types",
+    "function_name": "set_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER trg_pattern_types_updated_at BEFORE UPDATE ON public.pattern_types FOR EACH ROW EXECUTE FUNCTION library.set_updated_at()"
+  },
+  {
+    "trigger_name": "ctrg_pwb_validate",
+    "table_name": "program_workout_blocks",
+    "function_name": "trg_validate_program_workout_blocks",
+    "enabled": "O",
+    "trigger_type": 29,
+    "trigger_definition": "CREATE CONSTRAINT TRIGGER ctrg_pwb_validate AFTER INSERT OR DELETE OR UPDATE ON public.program_workout_blocks DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION trg_validate_program_workout_blocks()"
+  },
+  {
+    "trigger_name": "ctrg_pw_validate",
+    "table_name": "program_workouts",
+    "function_name": "trg_validate_program_workout_at_commit",
+    "enabled": "O",
+    "trigger_type": 5,
+    "trigger_definition": "CREATE CONSTRAINT TRIGGER ctrg_pw_validate AFTER INSERT ON public.program_workouts DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION trg_validate_program_workout_at_commit()"
+  },
+  {
+    "trigger_name": "trg_programs_set_updated_at",
+    "table_name": "programs",
+    "function_name": "set_updated_at",
+    "enabled": "O",
+    "trigger_type": 19,
+    "trigger_definition": "CREATE TRIGGER trg_programs_set_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+  }
+]

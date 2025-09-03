@@ -1,0 +1,16 @@
+{
+  "extraction_date": "2025-09-03T14:18:46.293Z",
+  "database_url": "postgresql://***:***@db.atvnjpwmydhqbxjgczti.supabase.co:5432/postgres",
+  "summary": {
+    "tables": 34,
+    "indexes": 126,
+    "foreign_keys": 34,
+    "rls_policies": 66,
+    "functions": 29,
+    "triggers": 17,
+    "views": 0,
+    "extensions": 6,
+    "sequences": 5,
+    "grants": 465
+  }
+}

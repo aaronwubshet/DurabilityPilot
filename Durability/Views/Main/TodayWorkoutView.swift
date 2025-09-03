@@ -45,7 +45,7 @@ struct TodayWorkoutView: View {
                         VStack(spacing: 8) {
                             // Personalized Greeting
                             HStack {
-                                Text("Hi Gabby, today's focus is \(getDayTheme().capitalized)")
+                                Text("Hi \(userFirstName), today's focus is \(getDayTheme().capitalized)")
                                     .font(.headline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.white)
@@ -209,27 +209,38 @@ struct TodayWorkoutView: View {
                             }
                         }
                         
+                        // Movement Library Button at bottom
+                        Button(action: {
+                            showMovementLibrary = true
+                        }) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "figure.strengthtraining.traditional")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                
+                                Text("Movement Library")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.title3)
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(12)
+                            .shadow(radius: 4)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .accessibilityLabel("Open Movement Library")
+                        
                         Spacer()
                     }
                     .padding()
                 }
-                
-                // Floating Button
-                Button(action: {
-                    showMovementLibrary = true
-                }) {
-                    Image(systemName: "figure.strengthtraining.traditional")
-                        .resizable()
-                        .frame(width: 48, height: 48)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                .padding(.leading, 24)
-                .padding(.bottom, 80) // Adjust as needed to sit above the tab bar
-                .accessibilityLabel("Open Movement Library")
             }
             .navigationTitle("Today's Workout")
             .toolbar {

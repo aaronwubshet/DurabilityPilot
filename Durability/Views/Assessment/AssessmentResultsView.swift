@@ -37,8 +37,35 @@ struct AssessmentResultsView: View {
                     OverallScoreCard(score: overallResult.durabilityScore)
                 }
                 
-                // Hardcoded Profile Section
-                HardcodedProfileCard()
+                // Personal Profile Section
+                if let currentUser = appState.currentUser {
+                    PersonalProfileCard(profile: currentUser)
+                } else {
+                    // Show loading state while profile is being loaded
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Image(systemName: "person.circle.fill")
+                                .foregroundColor(.accentColor)
+                            Text("Your Profile")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
+                        
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Loading profile...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                    }
+                    .padding(20)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                }
                 
                 // Body Area Analysis
                 BodyAreaAnalysisCard(
@@ -249,8 +276,9 @@ struct PersonalProfileCard: View {
                 }
                 
                 if let heightCm = profile.heightCm {
-                    let feet = Int(heightCm / 30.48)
-                    let inches = Int((heightCm.truncatingRemainder(dividingBy: 30.48)) / 2.54)
+                    let totalInches = heightCm / 2.54
+                    let feet = Int(totalInches / 12)
+                    let inches = Int(totalInches.truncatingRemainder(dividingBy: 12))
                     ProfileRow(title: "Height", value: "\(feet)'\(inches)\"")
                 }
                 
@@ -284,33 +312,7 @@ struct ProfileRow: View {
     }
 }
 
-// MARK: - Hardcoded Profile Card
-struct HardcodedProfileCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Image(systemName: "person.circle.fill")
-                    .foregroundColor(.accentColor)
-                Text("Profile")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                Spacer()
-            }
-            
-            VStack(alignment: .leading, spacing: 12) {
-                ProfileRow(title: "Name", value: "Gabby Rizika")
-                ProfileRow(title: "Age", value: "28 years old")
-                ProfileRow(title: "Sex", value: "Female")
-                ProfileRow(title: "Height", value: "5'5\"")
-                ProfileRow(title: "Weight", value: "125 lbs")
-            }
-        }
-        .padding(20)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-    }
-}
+
 
 // MARK: - Assessment Insights Card
 struct AssessmentInsightsCard: View {
