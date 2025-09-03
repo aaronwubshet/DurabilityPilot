@@ -165,8 +165,7 @@ struct ProgressTrendsCard: View {
             // Standardized Line Chart
             StandardizedLineChartView(
                 data: chartData,
-                title: selectedMetric.displayName,
-                isDemoMode: false
+                title: selectedMetric.displayName
             )
         }
         .padding(20)

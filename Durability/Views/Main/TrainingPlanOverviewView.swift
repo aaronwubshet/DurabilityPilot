@@ -3,7 +3,6 @@ import SwiftUI
 struct TrainingPlanOverviewView: View {
     @ObservedObject var trainingPlanService: TrainingPlanService
     @State private var selectedPhaseIndex = 0
-    @State private var selectedWeekIndex = 1
     @State private var expandedWeeks: Set<String> = []
     @State private var showingWorkoutDetail = false
     @State private var selectedWorkout: ProgramWorkout?
@@ -25,214 +24,66 @@ struct TrainingPlanOverviewView: View {
                         Text("\(program.weeks) weeks • \(program.workoutsPerWeek) workouts per week")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                        
+                        Text("4 blocks per workout • 2 movements per block")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
                 
-                // Today's Workout Section
-                if let todayWorkout = trainingPlanService.todayWorkout {
-                    TodayWorkoutCard(workout: todayWorkout, formatDate: formatDate)
-                        .padding(.horizontal)
-                } else if trainingPlanService.currentUserProgram != nil {
-                    // No workout today but program is active
-                    VStack(spacing: 12) {
-                        Text("No workout scheduled for today")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Check your weekly schedule below")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                }
-                
-                // Current Progress
-                if let currentPhase = trainingPlanService.getCurrentPhase(),
-                   let currentWeekIndex = trainingPlanService.getCurrentWeekIndex() {
-                    CurrentProgressCard(
-                        currentPhase: currentPhase,
-                        currentWeek: currentWeekIndex,
-                        totalWeeks: trainingPlanService.currentProgram?.weeks ?? 0
-                    )
-                    .padding(.horizontal)
-                }
-                
-                // Complete Training Plan Structure
+                // Structure Section
                 if trainingPlanService.currentUserProgram != nil && !trainingPlanService.programPhases.isEmpty {
                     VStack(alignment: .leading, spacing: 20) {
-                        Text("Training Plan Structure")
+                        Text("Structure")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .padding(.horizontal)
                         
-                        // Phase Selector
-                        if trainingPlanService.programPhases.count > 1 {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(Array(trainingPlanService.programPhases.enumerated()), id: \.element.id) { index, phase in
-                                        Button(action: {
-                                            selectedPhaseIndex = index
-                                            // Reset to first week of selected phase
-                                            if let phaseWeeks = trainingPlanService.getWeeksForPhase(phaseId: phase.id).first {
-                                                selectedWeekIndex = phaseWeeks.weekIndex
-                                            }
-                                        }) {
-                                            VStack(spacing: 4) {
-                                                Text("Phase")
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                                Text("\(phase.phaseIndex)")
-                                                    .font(.headline)
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .padding(.vertical, 8)
-                                            .padding(.horizontal, 16)
-                                            .background(selectedPhaseIndex == index ? Color.accentColor : Color(.systemGray5))
-                                            .foregroundColor(selectedPhaseIndex == index ? .white : .primary)
-                                            .cornerRadius(8)
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-                        
-                        // Current Phase Info
-                        if let currentPhase = trainingPlanService.getCurrentPhase() {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Current Phase: \(currentPhase.phaseIndex)")
-                                    .font(.headline)
-                                    .foregroundColor(.accentColor)
-                                
-                                Text("Weeks: \(currentPhase.weeksCount)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal)
-                        }
-                        
-                        // Week Selector
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Week Selection")
-                                .font(.headline)
-                                .padding(.horizontal)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(trainingPlanService.programWeeks, id: \.id) { week in
-                                        Button(action: {
-                                            selectedWeekIndex = week.weekIndex
-                                        }) {
-                                            VStack(spacing: 4) {
-                                                Text("Week")
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                                Text("\(week.weekIndex)")
-                                                    .font(.headline)
-                                                    .fontWeight(.semibold)
-                                            }
-                                            .padding(.vertical, 8)
-                                            .padding(.horizontal, 16)
-                                            .background(selectedWeekIndex == week.weekIndex ? Color.accentColor : Color(.systemGray5))
-                                            .foregroundColor(selectedWeekIndex == week.weekIndex ? .white : .primary)
-                                            .cornerRadius(8)
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-                        
-                        // Week Workouts
-                        if let selectedWeek = trainingPlanService.programWeeks.first(where: { $0.weekIndex == selectedWeekIndex }) {
-                            let weekWorkouts = trainingPlanService.getWorkoutsForWeek(weekId: selectedWeek.id)
-                            
-                            VStack(alignment: .leading, spacing: 16) {
-                                Text("Week \(selectedWeek.weekIndex) Workouts")
-                                    .font(.headline)
-                                    .padding(.horizontal)
-                                
-                                if weekWorkouts.isEmpty {
-                                    Text("No workouts found for this week")
-                                        .foregroundColor(.secondary)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                } else {
-                                    LazyVStack(spacing: 12) {
-                                        ForEach(weekWorkouts) { workout in
-                                            WeekWorkoutCard(
-                                                workout: workout,
-                                                onTap: {
-                                                    selectedWorkout = workout
-                                                    showingWorkoutDetail = true
-                                                }
-                                            )
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Phase Selector (Alternative view)
-                if trainingPlanService.programPhases.count > 1 {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Program Phases")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(Array(trainingPlanService.programPhases.enumerated()), id: \.element.id) { index, phase in
-                                    PhaseCard(
-                                        phase: phase,
-                                        isSelected: selectedPhaseIndex == index,
-                                        isCurrent: trainingPlanService.getCurrentPhase()?.id == phase.id
-                                    ) {
-                                        selectedPhaseIndex = index
-                                    }
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
-                }
-                
-                // Complete Program Structure (Expandable view)
-                if !trainingPlanService.programPhases.isEmpty {
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Complete Program Structure")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal)
-                        
-                        LazyVStack(spacing: 16) {
-                            ForEach(trainingPlanService.programPhases, id: \.id) { phase in
-                                PhaseDetailView(
+                        // Phase Selector - 3 phases side by side
+                        HStack(spacing: 12) {
+                            ForEach(Array(trainingPlanService.programPhases.enumerated()), id: \.element.id) { index, phase in
+                                PhaseCard(
                                     phase: phase,
-                                    weeks: trainingPlanService.getWeeksForPhase(phaseId: phase.id),
-                                    workouts: trainingPlanService.programWorkouts,
-                                    isExpanded: expandedWeeks.contains(phase.id),
-                                    onToggle: {
-                                        if expandedWeeks.contains(phase.id) {
-                                            expandedWeeks.remove(phase.id)
-                                        } else {
-                                            expandedWeeks.insert(phase.id)
-                                        }
+                                    isSelected: selectedPhaseIndex == index,
+                                    isCurrent: trainingPlanService.getCurrentPhase()?.id == phase.id,
+                                    onTap: {
+                                        selectedPhaseIndex = index
                                     }
                                 )
                             }
                         }
                         .padding(.horizontal)
+                        
+                        // Week Cards for Selected Phase
+                        if let selectedPhase = trainingPlanService.programPhases[safe: selectedPhaseIndex] {
+                            let phaseWeeks = trainingPlanService.programWeeks.filter { $0.phaseId == selectedPhase.id }
+                            
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Phase \(selectedPhase.phaseIndex) - \(selectedPhase.weeksCount) weeks")
+                                    .font(.headline)
+                                    .padding(.horizontal)
+                                
+                                LazyVStack(spacing: 12) {
+                                    ForEach(phaseWeeks) { week in
+                                        WeekCard(
+                                            week: week,
+                                            isExpanded: expandedWeeks.contains(week.id),
+                                            onToggle: {
+                                                if expandedWeeks.contains(week.id) {
+                                                    expandedWeeks.remove(week.id)
+                                                } else {
+                                                    expandedWeeks.insert(week.id)
+                                                }
+                                            },
+                                            trainingPlanService: trainingPlanService
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
                     }
                 }
             }
@@ -245,11 +96,6 @@ struct TrainingPlanOverviewView: View {
             if let currentPhase = trainingPlanService.getCurrentPhase(),
                let phaseIndex = trainingPlanService.programPhases.firstIndex(where: { $0.id == currentPhase.id }) {
                 selectedPhaseIndex = phaseIndex
-            }
-            
-            // Set initial week selection to current week
-            if let currentWeekIndex = trainingPlanService.getCurrentWeekIndex() {
-                selectedWeekIndex = currentWeekIndex
             }
             
             // Load training plan data if not already loaded
@@ -278,17 +124,9 @@ struct TrainingPlanOverviewView: View {
             }
         }
     }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
-    }
 }
 
 // MARK: - Supporting Views
-
-
 
 struct PhaseCard: View {
     let phase: ProgramPhase
@@ -311,8 +149,9 @@ struct PhaseCard: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 12)
             .background(backgroundColor)
             .foregroundColor(foregroundColor)
             .cornerRadius(12)
@@ -345,25 +184,24 @@ struct PhaseCard: View {
     }
 }
 
-struct PhaseDetailView: View {
-    let phase: ProgramPhase
-    let weeks: [ProgramWeek]
-    let workouts: [ProgramWorkout]
+struct WeekCard: View {
+    let week: ProgramWeek
     let isExpanded: Bool
     let onToggle: () -> Void
+    @ObservedObject var trainingPlanService: TrainingPlanService
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Phase Header
+        VStack(spacing: 0) {
+            // Week Header
             Button(action: onToggle) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Phase \(phase.phaseIndex)")
-                            .font(.title3)
+                        Text("Week \(week.weekIndex)")
+                            .font(.headline)
                             .fontWeight(.semibold)
                         
-                        Text("\(phase.weeksCount) weeks")
-                            .font(.subheadline)
+                        Text("Phase \(week.phaseWeekIndex ?? 0)")
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     
@@ -373,149 +211,72 @@ struct PhaseDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color(.systemBackground))
                 .cornerRadius(12)
+                .shadow(radius: 1)
             }
             .buttonStyle(PlainButtonStyle())
             
-            // Weeks Detail
+            // Expanded Week Content
             if isExpanded {
-                LazyVStack(spacing: 12) {
-                    ForEach(weeks, id: \.id) { week in
-                        WeekDetailView(
-                            week: week,
-                            workouts: getWorkoutsForWeek(weekId: week.id)
-                        )
-                    }
-                }
-                .padding(.leading, 20)
+                WeekExpandedContent(week: week, trainingPlanService: trainingPlanService)
+                    .padding(.top, 8)
             }
         }
     }
-    
-    private func getWorkoutsForWeek(weekId: String) -> [ProgramWorkout] {
-        return workouts.filter { $0.weekId == weekId }.sorted { $0.dayIndex < $1.dayIndex }
-    }
 }
 
-struct WeekDetailView: View {
+struct WeekExpandedContent: View {
     let week: ProgramWeek
-    let workouts: [ProgramWorkout]
+    let trainingPlanService: TrainingPlanService
+    @State private var weekWorkouts: [ProgramWorkout] = []
+    @State private var isLoading = true
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Week \(week.weekIndex)")
-                    .font(.headline)
-                    .fontWeight(.medium)
-                
-                Spacer()
-                
-                Text("\(workouts.count) workouts")
+            if isLoading {
+                ProgressView("Loading workouts...")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if weekWorkouts.isEmpty {
+                Text("No workouts scheduled for this week")
                     .font(.caption)
                     .foregroundColor(.secondary)
-            }
-            
-            if workouts.isEmpty {
-                Text("No workouts scheduled")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.leading)
+                    .frame(maxWidth: .infinity)
+                    .padding()
             } else {
-                LazyVStack(spacing: 8) {
-                    ForEach(workouts) { workout in
-                        WorkoutSummaryRow(workout: workout)
-                    }
-                }
-                .padding(.leading)
+                                                    LazyVStack(spacing: 8) {
+                                        ForEach(weekWorkouts) { workout in
+                                            WorkoutDayCard(workout: workout, trainingPlanService: trainingPlanService)
+                                        }
+                                    }
             }
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-        .shadow(radius: 1)
+        .onAppear {
+            loadWeekWorkouts()
+        }
+    }
+    
+    private func loadWeekWorkouts() {
+        Task {
+            let workouts = trainingPlanService.getWorkoutsForWeek(weekId: week.id)
+            await MainActor.run {
+                self.weekWorkouts = workouts
+                self.isLoading = false
+            }
+        }
     }
 }
 
-struct WorkoutSummaryRow: View {
+struct WorkoutDayCard: View {
     let workout: ProgramWorkout
+    let trainingPlanService: TrainingPlanService
+    @State private var showingWorkoutDetail = false
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Day \(workout.dayIndex)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Text(workout.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-struct TodayWorkoutCard: View {
-    let workout: UserWorkout
-    let formatDate: (Date) -> String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Today's Workout")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    
-                    Text(workout.titleSnapshot)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-                
-                StatusBadge(status: workout.status)
-            }
-            
-            HStack {
-                Label(formatDate(workout.scheduledDate), systemImage: "calendar")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                if workout.status == "planned" {
-                    Button("Start") {
-                        // Start workout logic
-                    }
-                    .buttonStyle(.borderedProminent)
-                } else if workout.status == "in_progress" {
-                    Button("Continue") {
-                        // Continue workout logic
-                    }
-                    .buttonStyle(.bordered)
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-    }
-}
-
-struct WeekWorkoutCard: View {
-    let workout: ProgramWorkout
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            showingWorkoutDetail = true
+        }) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Day \(workout.dayIndex)")
@@ -523,45 +284,23 @@ struct WeekWorkoutCard: View {
                         .foregroundColor(.secondary)
                     
                     Text(workout.title)
-                        .font(.headline)
+                        .font(.subheadline)
                         .fontWeight(.medium)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
             .padding()
-            .background(Color(.systemBackground))
+            .background(Color(.systemGray6))
             .cornerRadius(8)
-            .shadow(radius: 1)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-}
-
-struct StatusBadge: View {
-    let status: String
-    
-    var body: some View {
-        Text(status.replacingOccurrences(of: "_", with: " ").capitalized)
-            .font(.caption)
-            .fontWeight(.medium)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(statusColor)
-            .foregroundColor(.white)
-            .cornerRadius(6)
-    }
-    
-    private var statusColor: Color {
-        switch status {
-        case "planned": return .blue
-        case "in_progress": return .orange
-        case "completed": return .green
-        case "skipped": return .gray
-        default: return .gray
+        .sheet(isPresented: $showingWorkoutDetail) {
+            WorkoutDetailView(workout: workout, trainingPlanService: trainingPlanService)
         }
     }
 }
@@ -605,9 +344,9 @@ struct WorkoutDetailView: View {
                                 .font(.headline)
                                 .padding(.horizontal)
                             
-                            LazyVStack(spacing: 12) {
+                            LazyVStack(spacing: 16) {
                                 ForEach(movementBlocks) { block in
-                                    MovementBlockCard(block: block)
+                                    MovementBlockCard(block: block, trainingPlanService: trainingPlanService)
                                 }
                             }
                             .padding(.horizontal)
@@ -651,9 +390,13 @@ struct WorkoutDetailView: View {
 
 struct MovementBlockCard: View {
     let block: ProgramWorkoutBlock
+    let trainingPlanService: TrainingPlanService
+    @State private var blockItems: [MovementBlockItem] = []
+    @State private var isLoading = true
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
+            // Block Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Block \(block.sequence)")
@@ -674,14 +417,112 @@ struct MovementBlockCard: View {
                 }
             }
             
-            // Placeholder for movement block items
-            Text("Movement details will be loaded here")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            // Movement Items - 2 movements as half-width cards
+            if isLoading {
+                ProgressView("Loading movements...")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if blockItems.isEmpty {
+                Text("No movements found for this block")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else {
+                HStack(spacing: 12) {
+                    ForEach(blockItems) { item in
+                        MovementItemCard(movementItem: item)
+                    }
+                }
+            }
         }
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .onAppear {
+            loadBlockItems()
+        }
+    }
+    
+    private func loadBlockItems() {
+        Task {
+            do {
+                let items = try await trainingPlanService.fetchMovementBlockItems(blockId: block.movementBlockId)
+                await MainActor.run {
+                    self.blockItems = items
+                    self.isLoading = false
+                }
+            } catch {
+                print("Error loading movement block items: \(error)")
+                await MainActor.run {
+                    self.isLoading = false
+                    self.blockItems = []
+                }
+            }
+        }
+    }
+}
+
+struct MovementItemCard: View {
+    let movementItem: MovementBlockItem
+    @State private var showingMovementDetail = false
+    
+    var body: some View {
+        Button(action: {
+            showingMovementDetail = true
+        }) {
+            VStack(alignment: .leading, spacing: 8) {
+                if let movement = movementItem.movement {
+                    Text(movement.name ?? "Unknown Movement")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    Text("Sequence \(movementItem.sequence)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("Movement \(movementItem.sequence)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(8)
+            .shadow(radius: 1)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .sheet(isPresented: $showingMovementDetail) {
+            if let movement = movementItem.movement {
+                // Convert MovementMinimal to Movement for the detail view
+                let fullMovement = Movement(
+                    id: Int(movement.id) ?? 0,
+                    name: movement.name ?? "Unknown Movement",
+                    description: movement.description ?? "",
+                    videoURL: nil,
+                    jointsImpacted: [],
+                    musclesImpacted: [],
+                    superMetricsImpacted: [],
+                    sportsImpacted: [],
+                    intensityOptions: [],
+                    recoveryImpactScore: 0.0,
+                    resilienceImpactScore: 0.0,
+                    resultsImpactScore: 0.0
+                )
+                MovementDetailView(movement: fullMovement)
+            }
+        }
+    }
+}
+
+// MARK: - Extensions
+
+extension Array {
+    subscript(safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }
 

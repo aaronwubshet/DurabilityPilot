@@ -4,7 +4,6 @@ struct ProgressDashboardView: View {
     @StateObject private var viewModel = ProgressViewModel()
     @EnvironmentObject var appState: AppState
     @Binding var showingProfile: Bool
-    @State private var isDemoMode = false
 
     var body: some View {
         NavigationStack {
@@ -24,8 +23,7 @@ struct ProgressDashboardView: View {
                             // Progress History Card (Line Chart)
                             ProgressHistoryCard(
                                 assessmentHistory: viewModel.assessmentHistory,
-                                assessmentResultsHistory: viewModel.assessmentResultsHistory,
-                                isDemoMode: isDemoMode
+                                assessmentResultsHistory: viewModel.assessmentResultsHistory
                             )
                             
                             // Workout Completion Calendar
@@ -40,8 +38,7 @@ struct ProgressDashboardView: View {
                             // Analytics Button
                             AnalyticsButton()
                             
-                            // Demo Day Toggle
-                            DemoDayToggle(isDemoMode: $isDemoMode)
+
                             
                         } else {
                             EmptyStateView()
@@ -224,7 +221,6 @@ struct ProgressSuperMetricsCard: View {
 struct ProgressHistoryCard: View {
     let assessmentHistory: [Assessment]
     let assessmentResultsHistory: [AssessmentResult]
-    let isDemoMode: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -247,8 +243,7 @@ struct ProgressHistoryCard: View {
             // Standardized Line Chart
             StandardizedLineChartView(
                 data: getChartData(),
-                title: "Durability Score",
-                isDemoMode: isDemoMode
+                title: "Durability Score"
             )
         }
         .padding(20)
@@ -276,36 +271,6 @@ struct ProgressHistoryCard: View {
     }
     
     private func getChartData() -> [ChartDataPoint] {
-        if isDemoMode {
-            return getDemoChartData()
-        } else {
-            return getRealChartData()
-        }
-    }
-    
-    private func getDemoChartData() -> [ChartDataPoint] {
-        // Use the specific 12-week values from the image
-        let demoValues = [23.0, 28.0, 31.0, 39.0, 50.0, 41.0, 59.0, 64.0, 79.0, 72.0, 85.0, 88.0]
-        let calendar = Calendar.current
-        let now = Date()
-        var dataPoints: [ChartDataPoint] = []
-        
-        for (week, value) in demoValues.enumerated() {
-            let weekDate = calendar.date(byAdding: .weekOfYear, value: -11 + week, to: now) ?? now
-            
-            let dataPoint = ChartDataPoint(
-                x: Double(week),
-                y: value,
-                date: weekDate,
-                label: "Week \(week + 1)"
-            )
-            dataPoints.append(dataPoint)
-        }
-        
-        return dataPoints
-    }
-    
-    private func getRealChartData() -> [ChartDataPoint] {
         // Create data points with dates
         var dataPoints: [ChartDataPoint] = []
         
@@ -646,44 +611,13 @@ struct LegendItem: View {
         .environmentObject(AppState())
 }
 
-// MARK: - Demo Day Toggle
-struct DemoDayToggle: View {
-    @Binding var isDemoMode: Bool
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Demo Day Toggle")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.lightText)
-                
-                Spacer()
-                
-                Toggle("", isOn: $isDemoMode)
-                    .toggleStyle(SwitchToggleStyle(tint: .electricGreen))
-                    .labelsHidden()
-            }
-            
-            if isDemoMode {
-                Text("Showing 12-week demo data with realistic progression")
-                    .font(.caption)
-                    .foregroundColor(.secondaryText)
-                    .multilineTextAlignment(.leading)
-            }
-        }
-        .padding(16)
-        .background(Color.lightSpaceGrey)
-        .cornerRadius(12)
-    }
-}
+
 
 
 // MARK: - Standardized Line Chart View
 struct StandardizedLineChartView: View {
     let data: [ChartDataPoint]
     let title: String
-    let isDemoMode: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -719,10 +653,10 @@ struct StandardizedLineChartView: View {
                     }
                     .frame(height: 240)
                     
-                    // X-axis labels (dates or weeks)
+                    // X-axis labels (dates)
                     HStack {
                         ForEach(Array(data.enumerated()), id: \.offset) { index, point in
-                            Text(isDemoMode ? formatWeek(index) : formatDate(point.date))
+                            Text(formatDate(point.date))
                                 .font(.caption2)
                                 .foregroundColor(.secondaryText)
                                 .frame(maxWidth: .infinity)
@@ -739,11 +673,7 @@ struct StandardizedLineChartView: View {
         return formatter.string(from: date)
     }
     
-    private func formatWeek(_ index: Int) -> String {
-        // Show every other week to give more room for labels
-        let weekNumber = index + 1
-        return weekNumber % 2 == 1 ? "W\(weekNumber)" : ""
-    }
+
 }
 
 struct StandardizedChartGrid: View {
