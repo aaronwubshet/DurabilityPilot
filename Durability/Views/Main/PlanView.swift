@@ -1,104 +1,16 @@
 import SwiftUI
+import Supabase
 
 struct PlanView: View {
     @Binding var showingProfile: Bool
-    @State private var expandedDays: Set<Int> = []
+    @State private var expandedPhases: Set<String> = []
+    @State private var expandedWeeks: Set<String> = []
+    @StateObject private var trainingPlanService: TrainingPlanService
     
-    // Sample data for the next 7 days
-    private let upcomingDays: [TrainingDay] = [
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 0, to: Date())!,
-            focus: .recovery,
-            breakdown: FocusBreakdown(recovery: 70, resilience: 20, results: 10),
-            summary: "Active recovery day focused on mobility and tissue quality",
-            movements: [
-                "Dynamic Stretching Sequence",
-                "Foam Rolling - Lower Body",
-                "Gentle Walking or Swimming",
-                "Mobility Flow",
-                "Breathing Exercises"
-            ]
-        ),
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 1, to: Date())!,
-            focus: .resilience,
-            breakdown: FocusBreakdown(recovery: 20, resilience: 60, results: 20),
-            summary: "Build foundational strength and movement patterns",
-            movements: [
-                "Squat Pattern",
-                "Hip Hinge",
-                "Push Movement",
-                "Pull Movement",
-                "Core Stability",
-                "Balance Work"
-            ]
-        ),
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
-            focus: .results,
-            breakdown: FocusBreakdown(recovery: 10, resilience: 30, results: 60),
-            summary: "High-intensity training for performance gains",
-            movements: [
-                "Power Clean",
-                "Box Jumps",
-                "Sprint Intervals",
-                "Medicine Ball Throws",
-                "Plyometric Push-ups"
-            ]
-        ),
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 3, to: Date())!,
-            focus: .recovery,
-            breakdown: FocusBreakdown(recovery: 80, resilience: 15, results: 5),
-            summary: "Deep recovery and restoration protocols",
-            movements: [
-                "Static Stretching",
-                "Foam Rolling - Full Body",
-                "Light Yoga Flow",
-                "Cold Therapy",
-                "Meditation"
-            ]
-        ),
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 4, to: Date())!,
-            focus: .resilience,
-            breakdown: FocusBreakdown(recovery: 15, resilience: 70, results: 15),
-            summary: "Progressive overload and skill development",
-            movements: [
-                "Deadlift Variations",
-                "Overhead Press",
-                "Row Variations",
-                "Single Leg Work",
-                "Rotational Movement"
-            ]
-        ),
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 5, to: Date())!,
-            focus: .results,
-            breakdown: FocusBreakdown(recovery: 5, resilience: 25, results: 70),
-            summary: "Maximal effort and competition preparation",
-            movements: [
-                "Snatch",
-                "Clean and Jerk",
-                "Burpee Box Jumps",
-                "Wall Balls",
-                "Rowing Intervals"
-            ]
-        ),
-        TrainingDay(
-            date: Calendar.current.date(byAdding: .day, value: 6, to: Date())!,
-            focus: .recovery,
-            breakdown: FocusBreakdown(recovery: 90, resilience: 10, results: 0),
-            summary: "Complete rest and active recovery",
-            movements: [
-                "Walking",
-                "Swimming",
-                "Light Cycling",
-                "Stretching",
-                "Recovery Protocols"
-            ]
-        )
-    ]
+    init(showingProfile: Binding<Bool>, supabase: SupabaseClient) {
+        self._showingProfile = showingProfile
+        self._trainingPlanService = StateObject(wrappedValue: TrainingPlanService(supabase: supabase))
+    }
     
     var body: some View {
         NavigationStack {
@@ -127,106 +39,208 @@ struct PlanView: View {
                         }
                         .padding(.horizontal)
                         
-                        // Days List
-                        LazyVStack(spacing: 12) {
-                            ForEach(Array(upcomingDays.enumerated()), id: \.offset) { index, day in
-                                TrainingDayCard(
-                                    day: day,
-                                    isExpanded: expandedDays.contains(index),
-                                    onToggle: {
-                                        withAnimation(.easeInOut(duration: 0.3)) {
-                                            if expandedDays.contains(index) {
-                                                expandedDays.remove(index)
-                                            } else {
-                                                expandedDays.insert(index)
-                                            }
-                                        }
-                                    }
-                                )
+                        // Loading State
+                        if trainingPlanService.isLoading {
+                            ProgressView("Loading training plan...")
+                                .foregroundColor(.white)
+                                .scaleEffect(1.2)
+                                .padding(.vertical, 40)
+                        } else if let program = trainingPlanService.currentProgram {
+                            // Program Overview
+                            ProgramOverviewCard(program: program)
+                            
+                            // Phases and Weeks
+                            if let currentWeek = trainingPlanService.currentWeek {
+                                // Show current week workouts
+                                CurrentWeekSection(currentWeek: currentWeek)
                             }
+                            
+                            // Program Structure (Phases and Weeks)
+                            ProgramStructureSection(
+                                program: program,
+                                expandedPhases: $expandedPhases,
+                                expandedWeeks: $expandedWeeks
+                            )
+                            
+                        } else {
+                            // No active program
+                            VStack(spacing: 16) {
+                                Image(systemName: "calendar.badge.exclamationmark")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.secondary)
+                                
+                                Text("No Active Training Plan")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                
+                                Text("Contact your coach to get started with a personalized training plan.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .padding(.vertical, 40)
                         }
-                        .padding(.horizontal)
                         
                         Spacer(minLength: 100)
                     }
                 }
             }
         }
+        .onAppear {
+            loadTrainingPlan()
+        }
     }
     
-    private func formatWeekday(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"
-        return formatter.string(from: date)
+    private func loadTrainingPlan() {
+        Task {
+            do {
+                let _ = try await trainingPlanService.fetchActiveProgram()
+                if trainingPlanService.currentProgram != nil {
+                    let _ = try await trainingPlanService.fetchWeek(weekIndex: 1)
+                }
+            } catch {
+                print("Error loading training plan: \(error)")
+            }
+        }
     }
 }
 
-struct TrainingDayCard: View {
-    let day: TrainingDay
+// MARK: - Program Overview Card
+struct ProgramOverviewCard: View {
+    let program: Program
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(program.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text("\(program.weeks) weeks • \(program.workoutsPerWeek) workouts per week")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("Status")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                        Text("Active")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
+                }
+            }
+            
+
+        }
+        .padding()
+        .background(Color.cardBackground)
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Current Week Section
+struct CurrentWeekSection: View {
+    let currentWeek: ProgramWeek
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Current Week")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Text("Week \(currentWeek.weekIndex)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Text("Phase Week \(currentWeek.phaseWeekIndex)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color.cardBackground)
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Program Structure Section
+struct ProgramStructureSection: View {
+    let program: Program
+    @Binding var expandedPhases: Set<String>
+    @Binding var expandedWeeks: Set<String>
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Program Structure")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .padding(.horizontal)
+            
+            // For now, show a simplified structure since we need to fetch phases
+            // In the future, this would show actual phases and weeks
+            VStack(spacing: 12) {
+                ForEach(1...program.weeks, id: \.self) { weekIndex in
+                    WeekCard(
+                        weekIndex: weekIndex,
+                        isExpanded: expandedWeeks.contains("week_\(weekIndex)"),
+                        onToggle: {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                if expandedWeeks.contains("week_\(weekIndex)") {
+                                    expandedWeeks.remove("week_\(weekIndex)")
+                                } else {
+                                    expandedWeeks.insert("week_\(weekIndex)")
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+// MARK: - Week Card
+struct WeekCard: View {
+    let weekIndex: Int
     let isExpanded: Bool
     let onToggle: () -> Void
     
-    private func formatWeekday(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"
-        return formatter.string(from: date)
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
-    }
-    
-    private func focusColor(_ focus: TrainingFocus) -> Color {
-        switch focus {
-        case .recovery:
-            return .blue
-        case .resilience:
-            return .green
-        case .results:
-            return .orange
-        }
-    }
-    
-    private func focusIcon(_ focus: TrainingFocus) -> String {
-        switch focus {
-        case .recovery:
-            return "heart.fill"
-        case .resilience:
-            return "shield.fill"
-        case .results:
-            return "target"
-        }
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
-            // Day Header
+            // Week Header
             Button(action: onToggle) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(formatDate(day.date))
+                        Text("Week \(weekIndex)")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                         
-                        Text(formatWeekday(day.date))
+                        Text("Phase week details")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     
                     Spacer()
-                    
-                    HStack(spacing: 8) {
-                        Image(systemName: focusIcon(day.focus))
-                            .foregroundColor(focusColor(day.focus))
-                        
-                        Text(day.focus.rawValue.capitalized)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(focusColor(day.focus))
-                    }
                     
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(.secondary)
@@ -240,98 +254,47 @@ struct TrainingDayCard: View {
             
             // Expanded Content
             if isExpanded {
-                // Add spacing between date card and expanded content
                 Spacer()
                     .frame(height: 8)
                 
                 VStack(spacing: 16) {
-                    // Day Goal
+                    // Week Overview
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Day Goal")
+                        Text("Week Overview")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                         
-                        Text(day.summary)
+                        Text("Week \(weekIndex) focuses on building strength and endurance")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.leading)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    // Focus Breakdown
+                    // Workout Days
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Focus Breakdown")
+                        Text("Workout Days")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                         
                         VStack(spacing: 8) {
-                            FocusBreakdownRow(
-                                label: "Recovery",
-                                percentage: day.breakdown.recovery,
-                                color: .blue
-                            )
-                            
-                            FocusBreakdownRow(
-                                label: "Resilience",
-                                percentage: day.breakdown.resilience,
-                                color: .green
-                            )
-                            
-                            FocusBreakdownRow(
-                                label: "Results",
-                                percentage: day.breakdown.results,
-                                color: .orange
-                            )
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    // Movements
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Movements")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                        
-                        // Split movements into columns with max 3 per column
-                        let movements = day.movements
-                        let leftColumn = Array(movements.prefix(3))
-                        let rightColumn = Array(movements.dropFirst(3))
-                        
-                        HStack(alignment: .top, spacing: 16) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                ForEach(leftColumn, id: \.self) { movement in
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "circle.fill")
-                                            .font(.system(size: 6))
-                                            .foregroundColor(.accentColor)
-                                        
-                                        Text(movement)
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                    }
+                            ForEach(1...5, id: \.self) { dayIndex in
+                                HStack {
+                                    Text("Day \(dayIndex)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Spacer()
+                                    
+                                    Text("Workout details will be loaded")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .italic()
                                 }
+                                .padding(.vertical, 4)
                             }
-                            
-                            if !rightColumn.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    ForEach(rightColumn, id: \.self) { movement in
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "circle.fill")
-                                                .font(.system(size: 6))
-                                                .foregroundColor(.accentColor)
-                                            
-                                            Text(movement)
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            Spacer()
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -345,58 +308,6 @@ struct TrainingDayCard: View {
     }
 }
 
-struct FocusBreakdownRow: View {
-    let label: String
-    let percentage: Int
-    let color: Color
-    
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(width: 80, alignment: .leading)
-            
-            ProgressView(value: Double(percentage), total: 100)
-                .progressViewStyle(LinearProgressViewStyle(tint: color))
-                .scaleEffect(y: 0.8)
-            
-            Text("\(percentage)%")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(width: 35, alignment: .trailing)
-        }
-    }
-}
-
-// MARK: - Data Models
-
-struct TrainingDay {
-    let date: Date
-    let focus: TrainingFocus
-    let breakdown: FocusBreakdown
-    let summary: String
-    let movements: [String]
-}
-
-struct FocusBreakdown {
-    let recovery: Int
-    let resilience: Int
-    let results: Int
-}
-
-enum TrainingFocus: String, CaseIterable {
-    case recovery = "recovery"
-    case resilience = "resilience"
-    case results = "results"
-}
-
-// MARK: - Color Extensions
-
-extension Color {
-    static let cardBackground = Color(red: 0.15, green: 0.15, blue: 0.2)
-}
-
 #Preview {
-    PlanView(showingProfile: .constant(false))
+    PlanView(showingProfile: .constant(false), supabase: SupabaseManager.shared.client)
 }

@@ -57,6 +57,9 @@ extension Color {
     static let darkerSpaceGrey = Color(red: 0.08, green: 0.08, blue: 0.10)
     static let lightSpaceGrey = Color(red: 0.18, green: 0.18, blue: 0.20)
     
+    // Card Background
+    static let cardBackground = Color(red: 0.16, green: 0.16, blue: 0.18)
+    
     // Text Colors
     static let lightText = Color(red: 0.95, green: 0.95, blue: 0.97)
     static let secondaryText = Color(red: 0.7, green: 0.7, blue: 0.75)

@@ -1,0 +1,582 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "assessment_results",
+    "policyname": "assessment_results_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((profile_id)::text = (auth.uid())::text)",
+    "with_check": "((profile_id)::text = (auth.uid())::text)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessment_results",
+    "policyname": "assessment_results_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessment_results",
+    "policyname": "assessment_results_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessment_results",
+    "policyname": "assessment_results_service_role_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{service_role}",
+    "cmd": "ALL",
+    "qual": "true",
+    "with_check": "true"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessment_results",
+    "policyname": "assessment_results_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessments",
+    "policyname": "assessments_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((profile_id)::text = (auth.uid())::text)",
+    "with_check": "((profile_id)::text = (auth.uid())::text)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessments",
+    "policyname": "assessments_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessments",
+    "policyname": "assessments_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "assessments",
+    "policyname": "assessments_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "block_types",
+    "policyname": "bt_select_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "body_parts",
+    "policyname": "body_parts_sel_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "equipment",
+    "policyname": "equipment_read_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "equipment",
+    "policyname": "refdata_read_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "facilities",
+    "policyname": "facilities_sel_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "goals",
+    "policyname": "goals_read_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "goals",
+    "policyname": "refdata_read_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "injuries",
+    "policyname": "injuries_read_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "injuries",
+    "policyname": "refdata_read_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movement_block_items",
+    "policyname": "movement_block_items_sel_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movement_blocks",
+    "policyname": "movement_blocks_sel_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movement_content",
+    "policyname": "authenticated_select",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movement_content",
+    "policyname": "refdata_read_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movement_patterns",
+    "policyname": "authenticated_select",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movements",
+    "policyname": "authenticated_select",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "movements",
+    "policyname": "refdata_read_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "pattern_types",
+    "policyname": "authenticated_select",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_equipment",
+    "policyname": "profile_equipment_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((auth.uid())::text = (profile_id)::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_equipment",
+    "policyname": "profile_equipment_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_equipment",
+    "policyname": "profile_equipment_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_equipment",
+    "policyname": "profile_equipment_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_goals",
+    "policyname": "profile_goals_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((auth.uid())::text = (profile_id)::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_goals",
+    "policyname": "profile_goals_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_goals",
+    "policyname": "profile_goals_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_goals",
+    "policyname": "profile_goals_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_injuries",
+    "policyname": "profile_injuries_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((auth.uid())::text = (profile_id)::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_injuries",
+    "policyname": "profile_injuries_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_injuries",
+    "policyname": "profile_injuries_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_injuries",
+    "policyname": "profile_injuries_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_movement_blacklist",
+    "policyname": "profile_movement_blacklist_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((auth.uid())::text = (profile_id)::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_movement_blacklist",
+    "policyname": "profile_movement_blacklist_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_movement_blacklist",
+    "policyname": "profile_movement_blacklist_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_movement_blacklist",
+    "policyname": "profile_movement_blacklist_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_sports",
+    "policyname": "profile_sports_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((auth.uid())::text = (profile_id)::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_sports",
+    "policyname": "profile_sports_ins_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_sports",
+    "policyname": "profile_sports_sel_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profile_sports",
+    "policyname": "profile_sports_upd_owner",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = profile_id)",
+    "with_check": "(auth.uid() = profile_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_authenticated_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "ALL",
+    "qual": "((auth.uid())::text = (id)::text)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_ins_self",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(id = auth.uid())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_sel_own",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "(id = auth.uid())",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "profiles_upd_own",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "UPDATE",
+    "qual": "(id = auth.uid())",
+    "with_check": "(id = auth.uid())"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "program_phases",
+    "policyname": "program_phases_select_active",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon,authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM programs p\n  WHERE ((p.id = program_phases.program_id) AND (p.is_active IS TRUE))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "program_weeks",
+    "policyname": "program_weeks_select_active",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon,authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM programs p\n  WHERE ((p.id = program_weeks.program_id) AND (p.is_active IS TRUE))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "program_workout_blocks",
+    "policyname": "program_workout_blocks_select_active",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon,authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM ((program_workouts wo\n     JOIN program_weeks w ON ((w.id = wo.week_id)))\n     JOIN programs p ON ((p.id = w.program_id)))\n  WHERE ((wo.id = program_workout_blocks.program_workout_id) AND (p.is_active IS TRUE))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "program_workouts",
+    "policyname": "program_workouts_select_active",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon,authenticated}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM (program_weeks w\n     JOIN programs p ON ((p.id = w.program_id)))\n  WHERE ((w.id = program_workouts.week_id) AND (p.is_active IS TRUE))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "programs",
+    "policyname": "programs_select_active",
+    "permissive": "PERMISSIVE",
+    "roles": "{anon,authenticated}",
+    "cmd": "SELECT",
+    "qual": "(is_active IS TRUE)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "sports",
+    "policyname": "refdata_read_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "sports",
+    "policyname": "sports_read_access",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "super_metrics",
+    "policyname": "super_metrics_sel_auth",
+    "permissive": "PERMISSIVE",
+    "roles": "{authenticated}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  }
+]

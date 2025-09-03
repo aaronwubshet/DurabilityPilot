@@ -25,7 +25,7 @@ struct AssessmentResultsView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
                     
-                    Text("Personalized insights based on your assessment and profile")
+                    Text("Personalized injury risk and readiness insights based on your movement assessment and profile")
                         .font(.body)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.secondary)

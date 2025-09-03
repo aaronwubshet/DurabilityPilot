@@ -1,0 +1,802 @@
+[
+  {
+    "table_name": "assessment_results",
+    "index_name": "assessment_results_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX assessment_results_pkey ON public.assessment_results USING btree (id)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "assessment_results_unique_composite",
+    "column_name": "assessment_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX assessment_results_unique_composite ON public.assessment_results USING btree (assessment_id, profile_id, body_area)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "assessment_results_unique_composite",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX assessment_results_unique_composite ON public.assessment_results USING btree (assessment_id, profile_id, body_area)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "assessment_results_unique_composite",
+    "column_name": "body_area",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX assessment_results_unique_composite ON public.assessment_results USING btree (assessment_id, profile_id, body_area)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "idx_assessment_results_assessment_id",
+    "column_name": "assessment_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_assessment_results_assessment_id ON public.assessment_results USING btree (assessment_id)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "idx_assessment_results_body_area",
+    "column_name": "body_area",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_assessment_results_body_area ON public.assessment_results USING btree (body_area)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "idx_assessment_results_created_at",
+    "column_name": "created_at",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_assessment_results_created_at ON public.assessment_results USING btree (created_at)"
+  },
+  {
+    "table_name": "assessment_results",
+    "index_name": "idx_assessment_results_profile_id",
+    "column_name": "profile_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_assessment_results_profile_id ON public.assessment_results USING btree (profile_id)"
+  },
+  {
+    "table_name": "assessments",
+    "index_name": "assessments_pkey",
+    "column_name": "assessment_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX assessments_pkey ON public.assessments USING btree (assessment_id)"
+  },
+  {
+    "table_name": "block_types",
+    "index_name": "block_types_label_key",
+    "column_name": "label",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX block_types_label_key ON public.block_types USING btree (label)"
+  },
+  {
+    "table_name": "block_types",
+    "index_name": "block_types_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX block_types_pkey ON public.block_types USING btree (id)"
+  },
+  {
+    "table_name": "block_types",
+    "index_name": "block_types_slug_key",
+    "column_name": "slug",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX block_types_slug_key ON public.block_types USING btree (slug)"
+  },
+  {
+    "table_name": "body_parts",
+    "index_name": "body_parts_body_part_key",
+    "column_name": "body_part",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX body_parts_body_part_key ON public.body_parts USING btree (body_part)"
+  },
+  {
+    "table_name": "body_parts",
+    "index_name": "body_parts_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX body_parts_pkey ON public.body_parts USING btree (id)"
+  },
+  {
+    "table_name": "dose_metrics",
+    "index_name": "dose_metrics_key_key",
+    "column_name": "key",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX dose_metrics_key_key ON public.dose_metrics USING btree (key)"
+  },
+  {
+    "table_name": "dose_metrics",
+    "index_name": "dose_metrics_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX dose_metrics_pkey ON public.dose_metrics USING btree (id)"
+  },
+  {
+    "table_name": "equipment",
+    "index_name": "equipment_name_key",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX equipment_name_key ON public.equipment USING btree (name)"
+  },
+  {
+    "table_name": "equipment",
+    "index_name": "equipment_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX equipment_pkey ON public.equipment USING btree (id)"
+  },
+  {
+    "table_name": "facilities",
+    "index_name": "facilities_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX facilities_pkey ON public.facilities USING btree (id)"
+  },
+  {
+    "table_name": "goals",
+    "index_name": "goals_name_key",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX goals_name_key ON public.goals USING btree (name)"
+  },
+  {
+    "table_name": "goals",
+    "index_name": "goals_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX goals_pkey ON public.goals USING btree (id)"
+  },
+  {
+    "table_name": "injuries",
+    "index_name": "injuries_name_key",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX injuries_name_key ON public.injuries USING btree (name)"
+  },
+  {
+    "table_name": "injuries",
+    "index_name": "injuries_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX injuries_pkey ON public.injuries USING btree (id)"
+  },
+  {
+    "table_name": "modules",
+    "index_name": "modules_key_key",
+    "column_name": "key",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX modules_key_key ON public.modules USING btree (key)"
+  },
+  {
+    "table_name": "modules",
+    "index_name": "modules_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX modules_pkey ON public.modules USING btree (id)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "idx_mbi_block",
+    "column_name": "block_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_mbi_block ON public.movement_block_items USING btree (block_id)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_block_id_sequence_key",
+    "column_name": "block_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_block_id_sequence_key ON public.movement_block_items USING btree (block_id, sequence)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_block_id_sequence_key",
+    "column_name": "sequence",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_block_id_sequence_key ON public.movement_block_items USING btree (block_id, sequence)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_block_movement_uq",
+    "column_name": "block_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_block_movement_uq ON public.movement_block_items USING btree (block_id, movement_id)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_block_movement_uq",
+    "column_name": "movement_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_block_movement_uq ON public.movement_block_items USING btree (block_id, movement_id)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_block_seq_uq",
+    "column_name": "block_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_block_seq_uq ON public.movement_block_items USING btree (block_id, sequence)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_block_seq_uq",
+    "column_name": "sequence",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_block_seq_uq ON public.movement_block_items USING btree (block_id, sequence)"
+  },
+  {
+    "table_name": "movement_block_items",
+    "index_name": "movement_block_items_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX movement_block_items_pkey ON public.movement_block_items USING btree (id)"
+  },
+  {
+    "table_name": "movement_blocks",
+    "index_name": "movement_blocks_name_key",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_blocks_name_key ON public.movement_blocks USING btree (name)"
+  },
+  {
+    "table_name": "movement_blocks",
+    "index_name": "movement_blocks_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX movement_blocks_pkey ON public.movement_blocks USING btree (id)"
+  },
+  {
+    "table_name": "movement_blocks",
+    "index_name": "movement_blocks_slug_unique",
+    "column_name": "slug",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_blocks_slug_unique ON public.movement_blocks USING btree (slug)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "idx_movement_content_active",
+    "column_name": "movement_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_movement_content_active ON public.movement_content USING btree (movement_id, locale) WHERE is_active"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "idx_movement_content_active",
+    "column_name": "locale",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_movement_content_active ON public.movement_content USING btree (movement_id, locale) WHERE is_active"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_locale_idx",
+    "column_name": "locale",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX movement_content_locale_idx ON public.movement_content USING btree (locale)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_movement_id_locale_version_key",
+    "column_name": "movement_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_content_movement_id_locale_version_key ON public.movement_content USING btree (movement_id, locale, version)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_movement_id_locale_version_key",
+    "column_name": "locale",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_content_movement_id_locale_version_key ON public.movement_content USING btree (movement_id, locale, version)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_movement_id_locale_version_key",
+    "column_name": "version",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_content_movement_id_locale_version_key ON public.movement_content USING btree (movement_id, locale, version)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_movement_locale_uidx",
+    "column_name": "movement_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_content_movement_locale_uidx ON public.movement_content USING btree (movement_id, locale)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_movement_locale_uidx",
+    "column_name": "locale",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_content_movement_locale_uidx ON public.movement_content USING btree (movement_id, locale)"
+  },
+  {
+    "table_name": "movement_content",
+    "index_name": "movement_content_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX movement_content_pkey ON public.movement_content USING btree (id)"
+  },
+  {
+    "table_name": "movement_patterns",
+    "index_name": "movement_patterns_name_uniq",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movement_patterns_name_uniq ON public.movement_patterns USING btree (name)"
+  },
+  {
+    "table_name": "movement_patterns",
+    "index_name": "movement_patterns_pattern_type_idx",
+    "column_name": "pattern_type_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX movement_patterns_pattern_type_idx ON public.movement_patterns USING btree (pattern_type_id)"
+  },
+  {
+    "table_name": "movement_patterns",
+    "index_name": "movement_patterns_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX movement_patterns_pkey ON public.movement_patterns USING btree (id)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "idx_movements_allowed_dose_metric_ids",
+    "column_name": "allowed_dose_metric_ids",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX idx_movements_allowed_dose_metric_ids ON public.movements USING gin (allowed_dose_metric_ids)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "ix_mov_mod_vec_gin",
+    "column_name": "default_module_impact_vector",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX ix_mov_mod_vec_gin ON public.movements USING gin (default_module_impact_vector jsonb_path_ops)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "movements_library_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX movements_library_pkey ON public.movements USING btree (id)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "movements_module_impact_gin",
+    "column_name": "default_module_impact_vector",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX movements_module_impact_gin ON public.movements USING gin (default_module_impact_vector)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "movements_pattern_idx",
+    "column_name": "pattern_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX movements_pattern_idx ON public.movements USING btree (pattern_id)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "movements_pattern_name_uniq",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movements_pattern_name_uniq ON public.movements USING btree (pattern_id, name)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "movements_pattern_name_uniq",
+    "column_name": "pattern_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX movements_pattern_name_uniq ON public.movements USING btree (pattern_id, name)"
+  },
+  {
+    "table_name": "movements",
+    "index_name": "movements_sport_impact_gin",
+    "column_name": "default_sport_impact_vector",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX movements_sport_impact_gin ON public.movements USING gin (default_sport_impact_vector)"
+  },
+  {
+    "table_name": "pattern_types",
+    "index_name": "pattern_types_name_key",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX pattern_types_name_key ON public.pattern_types USING btree (name)"
+  },
+  {
+    "table_name": "pattern_types",
+    "index_name": "pattern_types_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX pattern_types_pkey ON public.pattern_types USING btree (id)"
+  },
+  {
+    "table_name": "profile_equipment",
+    "index_name": "profile_equipment_pkey",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_equipment_pkey ON public.profile_equipment USING btree (profile_id, equipment_id)"
+  },
+  {
+    "table_name": "profile_equipment",
+    "index_name": "profile_equipment_pkey",
+    "column_name": "equipment_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_equipment_pkey ON public.profile_equipment USING btree (profile_id, equipment_id)"
+  },
+  {
+    "table_name": "profile_equipment",
+    "index_name": "uq_profile_equipment",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_equipment ON public.profile_equipment USING btree (profile_id, equipment_id)"
+  },
+  {
+    "table_name": "profile_equipment",
+    "index_name": "uq_profile_equipment",
+    "column_name": "equipment_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_equipment ON public.profile_equipment USING btree (profile_id, equipment_id)"
+  },
+  {
+    "table_name": "profile_goals",
+    "index_name": "profile_goals_pkey",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_goals_pkey ON public.profile_goals USING btree (profile_id, goal_id)"
+  },
+  {
+    "table_name": "profile_goals",
+    "index_name": "profile_goals_pkey",
+    "column_name": "goal_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_goals_pkey ON public.profile_goals USING btree (profile_id, goal_id)"
+  },
+  {
+    "table_name": "profile_goals",
+    "index_name": "uq_profile_goals",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_goals ON public.profile_goals USING btree (profile_id, goal_id)"
+  },
+  {
+    "table_name": "profile_goals",
+    "index_name": "uq_profile_goals",
+    "column_name": "goal_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_goals ON public.profile_goals USING btree (profile_id, goal_id)"
+  },
+  {
+    "table_name": "profile_injuries",
+    "index_name": "profile_injuries_pkey",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_injuries_pkey ON public.profile_injuries USING btree (injury_id, profile_id)"
+  },
+  {
+    "table_name": "profile_injuries",
+    "index_name": "profile_injuries_pkey",
+    "column_name": "injury_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_injuries_pkey ON public.profile_injuries USING btree (injury_id, profile_id)"
+  },
+  {
+    "table_name": "profile_injuries",
+    "index_name": "uq_profile_injuries",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_injuries ON public.profile_injuries USING btree (profile_id, injury_id)"
+  },
+  {
+    "table_name": "profile_injuries",
+    "index_name": "uq_profile_injuries",
+    "column_name": "injury_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_injuries ON public.profile_injuries USING btree (profile_id, injury_id)"
+  },
+  {
+    "table_name": "profile_sports",
+    "index_name": "profile_sports_pkey",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_sports_pkey ON public.profile_sports USING btree (profile_id, sport_id)"
+  },
+  {
+    "table_name": "profile_sports",
+    "index_name": "profile_sports_pkey",
+    "column_name": "sport_id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profile_sports_pkey ON public.profile_sports USING btree (profile_id, sport_id)"
+  },
+  {
+    "table_name": "profile_sports",
+    "index_name": "uq_profile_sports",
+    "column_name": "profile_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_sports ON public.profile_sports USING btree (profile_id, sport_id)"
+  },
+  {
+    "table_name": "profile_sports",
+    "index_name": "uq_profile_sports",
+    "column_name": "sport_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX uq_profile_sports ON public.profile_sports USING btree (profile_id, sport_id)"
+  },
+  {
+    "table_name": "profiles",
+    "index_name": "profiles_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+  },
+  {
+    "table_name": "program_phases",
+    "index_name": "program_phases_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX program_phases_pkey ON public.program_phases USING btree (id)"
+  },
+  {
+    "table_name": "program_phases",
+    "index_name": "program_phases_prog_idx",
+    "column_name": "program_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX program_phases_prog_idx ON public.program_phases USING btree (program_id)"
+  },
+  {
+    "table_name": "program_phases",
+    "index_name": "program_phases_program_id_phase_index_key",
+    "column_name": "program_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_phases_program_id_phase_index_key ON public.program_phases USING btree (program_id, phase_index)"
+  },
+  {
+    "table_name": "program_phases",
+    "index_name": "program_phases_program_id_phase_index_key",
+    "column_name": "phase_index",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_phases_program_id_phase_index_key ON public.program_phases USING btree (program_id, phase_index)"
+  },
+  {
+    "table_name": "program_weeks",
+    "index_name": "program_weeks_phase_idx",
+    "column_name": "phase_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX program_weeks_phase_idx ON public.program_weeks USING btree (phase_id)"
+  },
+  {
+    "table_name": "program_weeks",
+    "index_name": "program_weeks_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX program_weeks_pkey ON public.program_weeks USING btree (id)"
+  },
+  {
+    "table_name": "program_weeks",
+    "index_name": "program_weeks_prog_idx",
+    "column_name": "program_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX program_weeks_prog_idx ON public.program_weeks USING btree (program_id)"
+  },
+  {
+    "table_name": "program_weeks",
+    "index_name": "program_weeks_program_id_week_index_key",
+    "column_name": "program_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_weeks_program_id_week_index_key ON public.program_weeks USING btree (program_id, week_index)"
+  },
+  {
+    "table_name": "program_weeks",
+    "index_name": "program_weeks_program_id_week_index_key",
+    "column_name": "week_index",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_weeks_program_id_week_index_key ON public.program_weeks USING btree (program_id, week_index)"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "index_name": "program_workout_blocks_block_idx",
+    "column_name": "movement_block_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX program_workout_blocks_block_idx ON public.program_workout_blocks USING btree (movement_block_id)"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "index_name": "program_workout_blocks_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX program_workout_blocks_pkey ON public.program_workout_blocks USING btree (id)"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "index_name": "program_workout_blocks_program_workout_id_sequence_key",
+    "column_name": "program_workout_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_workout_blocks_program_workout_id_sequence_key ON public.program_workout_blocks USING btree (program_workout_id, sequence)"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "index_name": "program_workout_blocks_program_workout_id_sequence_key",
+    "column_name": "sequence",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_workout_blocks_program_workout_id_sequence_key ON public.program_workout_blocks USING btree (program_workout_id, sequence)"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "index_name": "program_workout_blocks_workout_idx",
+    "column_name": "program_workout_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX program_workout_blocks_workout_idx ON public.program_workout_blocks USING btree (program_workout_id)"
+  },
+  {
+    "table_name": "program_workouts",
+    "index_name": "program_workouts_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX program_workouts_pkey ON public.program_workouts USING btree (id)"
+  },
+  {
+    "table_name": "program_workouts",
+    "index_name": "program_workouts_week_id_day_index_key",
+    "column_name": "week_id",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_workouts_week_id_day_index_key ON public.program_workouts USING btree (week_id, day_index)"
+  },
+  {
+    "table_name": "program_workouts",
+    "index_name": "program_workouts_week_id_day_index_key",
+    "column_name": "day_index",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX program_workouts_week_id_day_index_key ON public.program_workouts USING btree (week_id, day_index)"
+  },
+  {
+    "table_name": "program_workouts",
+    "index_name": "program_workouts_week_idx",
+    "column_name": "week_id",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX program_workouts_week_idx ON public.program_workouts USING btree (week_id)"
+  },
+  {
+    "table_name": "programs",
+    "index_name": "programs_active_idx",
+    "column_name": "is_active",
+    "is_unique": false,
+    "is_primary": false,
+    "index_definition": "CREATE INDEX programs_active_idx ON public.programs USING btree (is_active)"
+  },
+  {
+    "table_name": "programs",
+    "index_name": "programs_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX programs_pkey ON public.programs USING btree (id)"
+  },
+  {
+    "table_name": "programs",
+    "index_name": "programs_slug_key",
+    "column_name": "slug",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX programs_slug_key ON public.programs USING btree (slug)"
+  },
+  {
+    "table_name": "sports",
+    "index_name": "sports_name_key",
+    "column_name": "name",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX sports_name_key ON public.sports USING btree (name)"
+  },
+  {
+    "table_name": "sports",
+    "index_name": "sports_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX sports_pkey ON public.sports USING btree (id)"
+  },
+  {
+    "table_name": "super_metrics",
+    "index_name": "super_metrics_key_key",
+    "column_name": "key",
+    "is_unique": true,
+    "is_primary": false,
+    "index_definition": "CREATE UNIQUE INDEX super_metrics_key_key ON public.super_metrics USING btree (key)"
+  },
+  {
+    "table_name": "super_metrics",
+    "index_name": "super_metrics_pkey",
+    "column_name": "id",
+    "is_unique": true,
+    "is_primary": true,
+    "index_definition": "CREATE UNIQUE INDEX super_metrics_pkey ON public.super_metrics USING btree (id)"
+  }
+]

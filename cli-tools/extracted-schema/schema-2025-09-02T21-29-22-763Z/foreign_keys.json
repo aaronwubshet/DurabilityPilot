@@ -1,0 +1,245 @@
+[
+  {
+    "table_name": "assessment_results",
+    "column_name": "assessment_id",
+    "foreign_table_name": "assessments",
+    "foreign_column_name": "assessment_id",
+    "constraint_name": "assessment_results_assessment_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "NO ACTION"
+  },
+  {
+    "table_name": "assessment_results",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "assessment_results_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "assessments",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "assessments_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "movement_block_items",
+    "column_name": "block_id",
+    "foreign_table_name": "movement_blocks",
+    "foreign_column_name": "id",
+    "constraint_name": "movement_block_items_block_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "movement_block_items",
+    "column_name": "movement_id",
+    "foreign_table_name": "movements",
+    "foreign_column_name": "id",
+    "constraint_name": "movement_block_items_movement_uuid_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "RESTRICT"
+  },
+  {
+    "table_name": "movement_blocks",
+    "column_name": "block_type_id",
+    "foreign_table_name": "block_types",
+    "foreign_column_name": "id",
+    "constraint_name": "movement_blocks_block_type_id_fkey",
+    "update_rule": "RESTRICT",
+    "delete_rule": "RESTRICT"
+  },
+  {
+    "table_name": "movement_content",
+    "column_name": "movement_id",
+    "foreign_table_name": "movements",
+    "foreign_column_name": "id",
+    "constraint_name": "movement_content_movement_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "movement_patterns",
+    "column_name": "pattern_type_id",
+    "foreign_table_name": "pattern_types",
+    "foreign_column_name": "id",
+    "constraint_name": "movement_patterns_pattern_type_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "RESTRICT"
+  },
+  {
+    "table_name": "movements",
+    "column_name": "pattern_id",
+    "foreign_table_name": "movement_patterns",
+    "foreign_column_name": "id",
+    "constraint_name": "movements_pattern_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "RESTRICT"
+  },
+  {
+    "table_name": "profile_equipment",
+    "column_name": "equipment_id",
+    "foreign_table_name": "equipment",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_equipment_equipment_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_equipment",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_equipment_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_goals",
+    "column_name": "goal_id",
+    "foreign_table_name": "goals",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_goals_goal_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_goals",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_goals_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_injuries",
+    "column_name": "injury_id",
+    "foreign_table_name": "injuries",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_injuries_injury_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_injuries",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_injuries_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_movement_blacklist",
+    "column_name": "movement_uuid",
+    "foreign_table_name": "movements",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_movement_blacklist_movement_uuid_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "NO ACTION"
+  },
+  {
+    "table_name": "profile_movement_blacklist",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_movement_blacklist_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_sports",
+    "column_name": "profile_id",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_sports_profile_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "profile_sports",
+    "column_name": "sport_id",
+    "foreign_table_name": "sports",
+    "foreign_column_name": "id",
+    "constraint_name": "profile_sports_sport_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "program_phases",
+    "column_name": "program_id",
+    "foreign_table_name": "programs",
+    "foreign_column_name": "id",
+    "constraint_name": "program_phases_program_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "program_weeks",
+    "column_name": "phase_id",
+    "foreign_table_name": "program_phases",
+    "foreign_column_name": "id",
+    "constraint_name": "program_weeks_phase_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "program_weeks",
+    "column_name": "program_id",
+    "foreign_table_name": "programs",
+    "foreign_column_name": "id",
+    "constraint_name": "program_weeks_program_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "column_name": "movement_block_id",
+    "foreign_table_name": "movement_blocks",
+    "foreign_column_name": "id",
+    "constraint_name": "program_workout_blocks_movement_block_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "RESTRICT"
+  },
+  {
+    "table_name": "program_workout_blocks",
+    "column_name": "program_workout_id",
+    "foreign_table_name": "program_workouts",
+    "foreign_column_name": "id",
+    "constraint_name": "program_workout_blocks_program_workout_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "program_workouts",
+    "column_name": "program_id",
+    "foreign_table_name": "programs",
+    "foreign_column_name": "id",
+    "constraint_name": "program_workouts_program_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "program_workouts",
+    "column_name": "week_id",
+    "foreign_table_name": "program_weeks",
+    "foreign_column_name": "id",
+    "constraint_name": "program_workouts_week_id_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "CASCADE"
+  },
+  {
+    "table_name": "programs",
+    "column_name": "created_by",
+    "foreign_table_name": "profiles",
+    "foreign_column_name": "id",
+    "constraint_name": "programs_created_by_fkey",
+    "update_rule": "NO ACTION",
+    "delete_rule": "SET NULL"
+  }
+]
