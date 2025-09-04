@@ -497,22 +497,7 @@ struct MovementItemCard: View {
         .buttonStyle(PlainButtonStyle())
         .sheet(isPresented: $showingMovementDetail) {
             if let movement = movementItem.movement {
-                // Convert MovementMinimal to Movement for the detail view
-                let fullMovement = Movement(
-                    id: Int(movement.id) ?? 0,
-                    name: movement.name ?? "Unknown Movement",
-                    description: movement.description ?? "",
-                    videoURL: nil,
-                    jointsImpacted: [],
-                    musclesImpacted: [],
-                    superMetricsImpacted: [],
-                    sportsImpacted: [],
-                    intensityOptions: [],
-                    recoveryImpactScore: 0.0,
-                    resilienceImpactScore: 0.0,
-                    resultsImpactScore: 0.0
-                )
-                MovementDetailView(movement: fullMovement)
+                MovementDetailSheet(movementName: movement.name ?? "Unknown Movement")
             }
         }
     }
@@ -523,6 +508,83 @@ struct MovementItemCard: View {
 extension Array {
     subscript(safe index: Index) -> Element? {
         return indices.contains(index) ? self[index] : nil
+    }
+}
+
+// MARK: - Movement Detail Sheet
+struct MovementDetailSheet: View {
+    let movementName: String
+    @State private var movement: Movement?
+    @State private var isLoading = true
+    @State private var hasError = false
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    VStack {
+                        ProgressView()
+                        Text("Loading movement details...")
+                            .foregroundColor(.secondary)
+                    }
+                } else if let movement = movement {
+                    MovementDetailView(movement: movement)
+                } else if hasError {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.red)
+                        Text("Failed to load movement details")
+                            .font(.headline)
+                        Text("Please try again later")
+                            .foregroundColor(.secondary)
+                        Button("Retry") {
+                            loadMovement()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+            .navigationTitle(movementName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .onAppear {
+            loadMovement()
+        }
+    }
+    
+    private func loadMovement() {
+        Task {
+            isLoading = true
+            hasError = false
+            
+            do {
+                let movementService = MovementLibraryService()
+                let allMovements = try await movementService.getAllMovements()
+                let foundMovement = allMovements.first { $0.name.lowercased() == movementName.lowercased() }
+                
+                await MainActor.run {
+                    self.movement = foundMovement
+                    self.isLoading = false
+                    if foundMovement == nil {
+                        self.hasError = true
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    self.hasError = true
+                }
+            }
+        }
     }
 }
 

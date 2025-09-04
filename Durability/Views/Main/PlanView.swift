@@ -67,15 +67,15 @@ struct PlanView: View {
                             .padding(.horizontal)
                         
                         if let nextWorkouts = getNextThreeWorkouts(), !nextWorkouts.isEmpty {
-                                                    LazyVStack(spacing: 12) {
-                            ForEach(nextWorkouts) { workout in
-                                WorkoutPreviewCard(
-                                    workout: workout,
-                                    trainingPlanService: trainingPlanService
-                                )
+                            LazyVStack(spacing: 20) {
+                                ForEach(nextWorkouts) { workout in
+                                    WorkoutPreviewCard(
+                                        workout: workout,
+                                        trainingPlanService: trainingPlanService
+                                    )
+                                }
                             }
-                        }
-                        .padding(.horizontal)
+                            .padding(.horizontal)
                         } else {
                             Text("No upcoming workouts scheduled")
                                 .foregroundColor(.secondary)
@@ -219,99 +219,61 @@ struct WorkoutPreviewCard: View {
     @State private var blockItems: [String: [MovementBlockItem]] = [:]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header with day, title, and chevron indicator
+        VStack(alignment: .leading, spacing: 0) {
+            // Header with day and title only - always visible
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Day \(workout.dayIndex)")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    
-                    Text(workout.title)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .lineLimit(2)
-                }
+                Text("Day \(workout.dayIndex): \(workout.title)")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
                 
                 Spacer()
                 
-                // Downward chevron indicator
+                // Chevron indicator
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white)
                     .animation(.easeInOut(duration: 0.2), value: isExpanded)
             }
+            .padding(.vertical, 20)
+            .padding(.horizontal, 24)
+            .background(Color(.systemGray5))
+            .cornerRadius(16)
             
-            // Workout blocks preview
-            if let blocks = workoutBlocks {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(blocks.count) blocks")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    // Show first few block names
-                    ForEach(Array(blocks.prefix(2)), id: \.id) { block in
-                        Text("• \(block.movementBlock?.name ?? "Unknown Block")")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                    
-                    if blocks.count > 2 {
-                        Text("+ \(blocks.count - 2) more")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            
-
-            
-            // Expanded details
+            // Expanded details - only visible when expanded
             if isExpanded {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 20) {
                     if let blocks = workoutBlocks {
                         ForEach(blocks) { block in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(block.movementBlock?.name ?? "Unknown Block")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                
-                                if let items = blockItems[block.id] {
-                                    ForEach(items) { item in
-                                        HStack {
-                                            Text("• \(item.movement?.name ?? "Unknown Movement")")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                            
-                                            Spacer()
-                                            
-                                            // Extract sets and reps from defaultDose if available
-                                            if let dose = item.defaultDose["sets"] as? Int,
-                                               let reps = item.defaultDose["reps"] as? Int {
-                                                Text("\(dose) × \(reps)")
-                                                    .font(.caption2)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-                                        .padding(.leading, 8)
-                                    }
-                                }
-                            }
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 8)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
+                            CollapsibleBlockCard(
+                                block: block,
+                                blockItems: blockItems[block.id] ?? []
+                            )
                         }
+                    } else {
+                        // Loading state
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Loading workout details...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
                     }
                 }
+                .padding(.top, 20)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.systemGray5), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
         .animation(.easeInOut(duration: 0.3), value: isExpanded)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -321,7 +283,7 @@ struct WorkoutPreviewCard: View {
         .onAppear {
             loadWorkoutBlocks()
         }
-        .onChange(of: isExpanded) { newValue in
+        .onChange(of: isExpanded) { _, newValue in
             if newValue && workoutBlocks == nil {
                 loadWorkoutBlocks()
             }
@@ -349,6 +311,156 @@ struct WorkoutPreviewCard: View {
         }
     }
 }
+
+// MARK: - Collapsible Block Card
+struct CollapsibleBlockCard: View {
+    let block: ProgramWorkoutBlock
+    let blockItems: [MovementBlockItem]
+    @State private var isBlockExpanded = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Block header - always visible
+            HStack {
+                Text(block.movementBlock?.name ?? "Unknown Block")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                // Block chevron indicator
+                Image(systemName: isBlockExpanded ? "chevron.up" : "chevron.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .animation(.easeInOut(duration: 0.2), value: isBlockExpanded)
+            }
+            .padding()
+            .background(Color(.systemGray4))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(.systemGray3), lineWidth: 1)
+            )
+            
+            // Block movements - only visible when expanded
+            if isBlockExpanded {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 12) {
+                    ForEach(blockItems) { item in
+                        MovementTile(
+                            movement: item.movement,
+                            movementId: item.movementId
+                        )
+                    }
+                }
+                .padding(.top, 16)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isBlockExpanded.toggle()
+            }
+        }
+    }
+}
+
+// MARK: - Movement Tile
+struct MovementTile: View {
+    let movement: MovementMinimal?
+    let movementId: String
+    @State private var fullMovement: Movement?
+    @State private var isLoading = true
+    
+    var body: some View {
+        NavigationLink(destination: Group {
+            if isLoading {
+                VStack {
+                    ProgressView()
+                    Text("Loading movement details...")
+                        .foregroundColor(.secondary)
+                }
+            } else if let fullMovement = fullMovement {
+                MovementDetailView(movement: fullMovement)
+            } else {
+                Text("Failed to load movement details.")
+                    .foregroundColor(.red)
+            }
+        }) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(movement?.name ?? "Unknown Movement")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                
+                if let description = movement?.description, !description.isEmpty {
+                    Text(description)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.systemGray4), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onAppear(perform: loadFullMovement)
+    }
+    
+    	private func loadFullMovement() {
+		guard fullMovement == nil else { return }
+		
+		// Use movement name instead of UUID for searching
+		guard let movementName = movement?.name else {
+			print("❌ [MovementTile] No movement name available")
+			isLoading = false
+			return
+		}
+		
+		print("🔍 [MovementTile] Loading full movement for name: \(movementName)")
+		
+		Task {
+			do {
+				let movementService = MovementLibraryService()
+				print("🔍 [MovementTile] Calling getAllMovements to find movement...")
+				
+				// Get all movements and find the one with matching name
+				let allMovements = try await movementService.getAllMovements()
+				let foundMovement = allMovements.first { $0.name.lowercased() == movementName.lowercased() }
+				
+				print("🔍 [MovementTile] Found movement: \(foundMovement?.name ?? "nil")")
+				
+				await MainActor.run {
+					self.fullMovement = foundMovement
+					self.isLoading = false
+					print("✅ [MovementTile] Successfully loaded movement: \(foundMovement?.name ?? "nil")")
+				}
+			} catch {
+				print("❌ [MovementTile] Error loading full movement: \(error)")
+				await MainActor.run {
+					self.isLoading = false
+				}
+			}
+		}
+	}
+}
+
+
+
+
 
 struct WeekAheadCard: View {
     let week: ProgramWeek

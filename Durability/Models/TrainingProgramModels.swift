@@ -263,7 +263,7 @@ struct UserWorkout: Decodable, Identifiable {
         case userNotes = "user_notes"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
-        case userProgram = "user_program"
+        case userProgram = "user_programs"
     }
     
     init(from decoder: Decoder) throws {

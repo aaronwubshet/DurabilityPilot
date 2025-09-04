@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 struct TodayWorkoutView: View {
     @EnvironmentObject var appState: AppState
@@ -6,9 +7,16 @@ struct TodayWorkoutView: View {
     @State private var showRunner = false
     @State private var showAssessmentPrompt = false
     @State private var showMovementLibrary = false
-    @StateObject private var movementLibraryService = MovementLibraryService()
-    @State private var availableMovements: [Movement] = []
-    @State private var isLoadingMovements = false
+    @StateObject private var trainingPlanService: TrainingPlanService
+    @State private var todayWorkout: UserWorkout?
+    @State private var workoutBlocks: [ProgramWorkoutBlock] = []
+    @State private var blockItems: [String: [MovementBlockItem]] = [:]
+    @State private var isLoadingWorkout = false
+    
+    init(showingProfile: Binding<Bool>, supabase: SupabaseClient) {
+        self._showingProfile = showingProfile
+        self._trainingPlanService = StateObject(wrappedValue: TrainingPlanService(supabase: supabase))
+    }
     
     // Computed property to get user's first name
     private var userFirstName: String {
@@ -20,15 +28,28 @@ struct TodayWorkoutView: View {
     
     // Computed properties for workout completion
     private var workoutCompletionPercentage: Double {
-        // For now, return 0.0 since we don't have real workout data
-        // In a real app, this would come from the user's workout progress
-        return 0.0
+        guard let workout = todayWorkout else { return 0.0 }
+        
+        // Calculate completion based on workout status
+        switch workout.status.lowercased() {
+        case "completed":
+            return 1.0
+        case "in_progress":
+            return 0.5 // Assume 50% if in progress
+        default:
+            return 0.0
+        }
     }
     
     private var workoutCompletionText: String {
-        if workoutCompletionPercentage > 0.0 {
+        guard let workout = todayWorkout else { return "Get Started" }
+        
+        switch workout.status.lowercased() {
+        case "completed":
+            return "Completed"
+        case "in_progress":
             return "Continue"
-        } else {
+        default:
             return "Get Started"
         }
     }
@@ -66,76 +87,38 @@ struct TodayWorkoutView: View {
                         .background(Color.cardBackground)
                         .cornerRadius(12)
                         
-                        // Workout Status Header with Completion Percentage and Plan Progress
-                        HStack(spacing: 16) {
-                            // Left side: Workout progress (75% width)
-                            VStack(spacing: 12) {
-                                HStack {
-                                    HStack(spacing: 8) {
-                                        Text(workoutCompletionText)
-                                            .font(.title2)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.orange)
-                                        
-                                        // Small play button
-                                        Button(action: {
-                                            showRunner = true
-                                        }) {
-                                            Image(systemName: "play.circle.fill")
-                                                .font(.title2)
-                                                .foregroundColor(.orange)
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    Text("\(Int(workoutCompletionPercentage * 100))%")
+                        // Workout Status Header with Completion Percentage
+                        VStack(spacing: 12) {
+                            HStack {
+                                HStack(spacing: 8) {
+                                    Text(workoutCompletionText)
                                         .font(.title2)
                                         .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                }
-                                
-                                // Progress Bar
-                                ProgressView(value: workoutCompletionPercentage, total: 1.0)
-                                    .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-                                    .scaleEffect(x: 1, y: 2, anchor: .center)
-                            }
-                            .frame(maxWidth: .infinity)
-                            
-                            // Right side: Phase progress tracker (25% width)
-                            VStack(spacing: 8) {
-                                Text("Phase Progress")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.secondary)
-                                
-                                ZStack {
-                                    // Background circle
-                                    Circle()
-                                        .stroke(Color(.systemGray4), lineWidth: 4)
-                                        .frame(width: 60, height: 60)
+                                        .foregroundColor(.orange)
                                     
-                                    // Progress circle (5/12 = ~42%)
-                                    Circle()
-                                        .trim(from: 0, to: 5.0/12.0)
-                                        .stroke(Color.orange, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                        .frame(width: 60, height: 60)
-                                        .rotationEffect(.degrees(-90))
-                                    
-                                    // Center text
-                                    VStack(spacing: 2) {
-                                        Text("5")
+                                    // Small play button
+                                    Button(action: {
+                                        showRunner = true
+                                    }) {
+                                        Image(systemName: "play.circle.fill")
                                             .font(.title2)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.white)
-                                        Text("/12")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(.orange)
                                     }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
+                                
+                                Spacer()
+                                
+                                Text("\(Int(workoutCompletionPercentage * 100))%")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
                             }
-                            .frame(width: 80)
+                            
+                            // Progress Bar
+                            ProgressView(value: workoutCompletionPercentage, total: 1.0)
+                                .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                                .scaleEffect(x: 1, y: 2, anchor: .center)
                         }
                         .padding()
                         .background(Color.cardBackground)
@@ -145,10 +128,10 @@ struct TodayWorkoutView: View {
                         
                         // Workout Structure
                         VStack(alignment: .leading, spacing: 16) {
-                            if isLoadingMovements {
+                            if isLoadingWorkout {
                                 // Loading state
                                 VStack(spacing: 16) {
-                                    ForEach(0..<4) { _ in
+                                    ForEach(0..<3) { _ in
                                         VStack(alignment: .leading, spacing: 12) {
                                             HStack {
                                                 Rectangle()
@@ -178,34 +161,46 @@ struct TodayWorkoutView: View {
                                         .cornerRadius(12)
                                     }
                                 }
+                            } else if todayWorkout == nil {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "calendar.badge.exclamationmark")
+                                        .font(.largeTitle)
+                                        .foregroundColor(.secondary)
+                                    Text("No workout scheduled for today")
+                                        .font(.headline)
+                                    Text("Check your training plan or contact your coach")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    Button("Retry") {
+                                        Task {
+                                            await loadTodaysWorkout()
+                                        }
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                            } else if workoutBlocks.isEmpty {
+                                VStack(spacing: 16) {
+                                    Image(systemName: "figure.walk")
+                                        .font(.largeTitle)
+                                        .foregroundColor(.secondary)
+                                    Text("Workout details loading...")
+                                        .font(.headline)
+                                    Text("Please wait while we load your workout")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
                             } else {
-                                WorkoutSection(
-                                    title: "Warm Up",
-                                    subtitle: "Warm up and prepare your body",
-                                    movements: getMovementsForSection("Warm Up"),
-                                    isLoading: isLoadingMovements
-                                )
-                                
-                                WorkoutSection(
-                                    title: "Strength & Conditioning",
-                                    subtitle: "Primary strength movements",
-                                    movements: getMovementsForSection("Strength & Conditioning"),
-                                    isLoading: isLoadingMovements
-                                )
-                                
-                                WorkoutSection(
-                                    title: "Aerobic",
-                                    subtitle: "Endurance and conditioning",
-                                    movements: getMovementsForSection("Aerobic"),
-                                    isLoading: isLoadingMovements
-                                )
-                                
-                                WorkoutSection(
-                                    title: "Cool Down",
-                                    subtitle: "Cool down and recovery",
-                                    movements: getMovementsForSection("Cool Down"),
-                                    isLoading: isLoadingMovements
-                                )
+                                // Display actual workout blocks
+                                ForEach(workoutBlocks) { block in
+                                    TodayWorkoutBlockSection(
+                                        block: block,
+                                        blockItems: blockItems[block.id] ?? []
+                                    )
+                                }
                             }
                         }
                         
@@ -254,7 +249,7 @@ struct TodayWorkoutView: View {
             }
             .onAppear {
                 Task {
-                    await loadMovements()
+                    await loadTodaysWorkout()
                 }
             }
         }
@@ -269,93 +264,120 @@ struct TodayWorkoutView: View {
         }
     }
     
-    // MARK: - Movement Loading
+    // MARK: - Workout Loading
     
-    private func loadMovements() async {
-        isLoadingMovements = true
+    private func loadTodaysWorkout() async {
+        isLoadingWorkout = true
         do {
-            availableMovements = try await movementLibraryService.getAllMovements()
-            print("Loaded \(availableMovements.count) movements from database")
+            print("🔍 [TodayWorkoutView] Starting to load today's workout...")
+            
+            // First ensure we have the user's program
+            let _ = try await trainingPlanService.fetchActiveUserProgram()
+            print("🔍 [TodayWorkoutView] User program loaded")
+            
+            // Fetch today's workout
+            let workout = try await trainingPlanService.fetchTodayWorkout()
+            print("🔍 [TodayWorkoutView] Today's workout fetched: \(workout?.titleSnapshot ?? "No workout")")
+            
+            await MainActor.run {
+                self.todayWorkout = workout
+            }
+            
+            // If we have a workout, load its blocks and movements
+            if let workout = workout {
+                print("🔍 [TodayWorkoutView] Loading workout details...")
+                await loadWorkoutDetails(workout: workout)
+            } else {
+                print("🔍 [TodayWorkoutView] No workout found for today")
+            }
+            
+            print("✅ [TodayWorkoutView] Loaded today's workout: \(workout?.titleSnapshot ?? "No workout")")
         } catch {
-            print("Error loading movements: \(error)")
-            // If database loading fails, we'll use fallback movements
-            availableMovements = []
+            print("❌ [TodayWorkoutView] Error loading today's workout: \(error)")
+            await MainActor.run {
+                self.todayWorkout = nil
+                self.workoutBlocks = []
+                self.blockItems = [:]
+            }
         }
-        isLoadingMovements = false
+        isLoadingWorkout = false
     }
     
-    private func getMovementsForSection(_ section: String) -> [Movement] {
-        let allMovements = availableMovements
-        
-        // If no movements loaded yet, return fallback movements
-        if allMovements.isEmpty {
-            print("No movements loaded, using fallback for \(section)")
-            return getFallbackMovements(for: section)
-        }
-        
-        print("Using \(allMovements.count) loaded movements for \(section)")
-        
-        switch section {
-        case "Warm Up":
-            // Return movements with high recovery impact for warm-up
-            let warmUpMovements = allMovements.filter { $0.recoveryImpactScore > 0.3 }
-            let result = Array(warmUpMovements.isEmpty ? allMovements.shuffled().prefix(2) : warmUpMovements.shuffled().prefix(2))
-            print("Warm Up: \(result.count) movements")
-            return result
-        case "Strength & Conditioning":
-            // Return movements with high resilience impact for strength
-            let strengthMovements = allMovements.filter { $0.resilienceImpactScore > 0.3 }
-            let result = Array(strengthMovements.isEmpty ? allMovements.shuffled().prefix(2) : strengthMovements.shuffled().prefix(2))
-            print("Strength: \(result.count) movements")
-            return result
-        case "Aerobic":
-            // Return movements with high results impact for aerobic work
-            let aerobicMovements = allMovements.filter { $0.resultsImpactScore > 0.3 }
-            let result = Array(aerobicMovements.isEmpty ? allMovements.shuffled().prefix(2) : aerobicMovements.shuffled().prefix(2))
-            print("Aerobic: \(result.count) movements")
-            return result
-        case "Cool Down":
-            // Return movements with high recovery impact for cool down
-            let coolDownMovements = allMovements.filter { $0.recoveryImpactScore > 0.2 }
-            let result = Array(coolDownMovements.isEmpty ? allMovements.shuffled().prefix(2) : coolDownMovements.shuffled().prefix(2))
-            print("Cool Down: \(result.count) movements")
-            return result
-        default:
-            let result = Array(allMovements.shuffled().prefix(2))
-            print("Default: \(result.count) movements")
-            return result
+    private func loadWorkoutDetails(workout: UserWorkout) async {
+        do {
+            print("🔍 [TodayWorkoutView] Loading workout details for: \(workout.titleSnapshot)")
+            print("🔍 [TodayWorkoutView] Workout dayIndex: \(workout.dayIndex)")
+            print("🔍 [TodayWorkoutView] Workout weekIndex: \(workout.weekIndex)")
+            
+            // Get the program ID from the user program
+            guard let userProgram = workout.userProgram else {
+                print("❌ [TodayWorkoutView] No userProgram found in workout")
+                return
+            }
+            
+            let programId = userProgram.programId
+            print("🔍 [TodayWorkoutView] Program ID: \(programId)")
+            
+            // First, ensure we have the complete program structure
+            if trainingPlanService.programWeeks.isEmpty || trainingPlanService.programWorkouts.isEmpty {
+                print("🔍 [TodayWorkoutView] Program structure not loaded, fetching complete structure...")
+                let _ = try await trainingPlanService.fetchCompleteProgramStructure(programId: programId)
+            }
+            
+            print("🔍 [TodayWorkoutView] Program weeks count: \(trainingPlanService.programWeeks.count)")
+            print("🔍 [TodayWorkoutView] Program workouts count: \(trainingPlanService.programWorkouts.count)")
+            
+            // Get the corresponding program workout to fetch blocks
+            guard let currentWeekIndex = trainingPlanService.getCurrentWeekIndex() else {
+                print("❌ [TodayWorkoutView] Could not get current week index")
+                return
+            }
+            
+            print("🔍 [TodayWorkoutView] Current week index: \(currentWeekIndex)")
+            
+            guard let currentWeek = trainingPlanService.programWeeks.first(where: { $0.weekIndex == currentWeekIndex }) else {
+                print("❌ [TodayWorkoutView] Could not find current week")
+                return
+            }
+            
+            print("🔍 [TodayWorkoutView] Current week ID: \(currentWeek.id)")
+            
+            let weekWorkouts = trainingPlanService.getWorkoutsForWeek(weekId: currentWeek.id)
+            print("🔍 [TodayWorkoutView] Week workouts count: \(weekWorkouts.count)")
+            
+            guard let programWorkout = weekWorkouts.first(where: { $0.dayIndex == workout.dayIndex }) else {
+                print("❌ [TodayWorkoutView] Could not find program workout for day \(workout.dayIndex)")
+                print("🔍 [TodayWorkoutView] Available day indices: \(weekWorkouts.map { $0.dayIndex })")
+                return
+            }
+            
+            print("🔍 [TodayWorkoutView] Found program workout: \(programWorkout.title) (ID: \(programWorkout.id))")
+            
+            // Fetch workout blocks
+            let blocks = try await trainingPlanService.fetchWorkoutMovementBlocks(workoutId: programWorkout.id)
+            print("🔍 [TodayWorkoutView] Fetched \(blocks.count) workout blocks")
+            
+            await MainActor.run {
+                self.workoutBlocks = blocks
+            }
+            
+            // Load block items for each block
+            for block in blocks {
+                print("🔍 [TodayWorkoutView] Loading items for block: \(block.movementBlock?.name ?? "Unknown")")
+                let items = try await trainingPlanService.fetchMovementBlockItems(blockId: block.movementBlockId)
+                print("🔍 [TodayWorkoutView] Loaded \(items.count) items for block")
+                await MainActor.run {
+                    self.blockItems[block.id] = items
+                }
+            }
+            
+            print("✅ [TodayWorkoutView] Successfully loaded \(blocks.count) workout blocks with movements")
+        } catch {
+            print("❌ [TodayWorkoutView] Error loading workout details: \(error)")
         }
     }
     
-    private func getFallbackMovements(for section: String) -> [Movement] {
-        switch section {
-        case "Warm Up":
-            return [
-                Movement(id: 1, name: "Dynamic Stretching", description: "5-10 minutes of dynamic stretching", videoURL: nil, jointsImpacted: ["ankle", "knee", "hip"], musclesImpacted: ["calves", "hamstrings", "glutes"], superMetricsImpacted: ["mobility"], sportsImpacted: ["general"], intensityOptions: ["light", "moderate"], recoveryImpactScore: 0.8, resilienceImpactScore: 0.2, resultsImpactScore: 0.1),
-                Movement(id: 2, name: "Mobility Work", description: "Joint preparation and mobility", videoURL: nil, jointsImpacted: ["shoulder", "spine"], musclesImpacted: ["core", "upper back"], superMetricsImpacted: ["mobility"], sportsImpacted: ["general"], intensityOptions: ["light"], recoveryImpactScore: 0.7, resilienceImpactScore: 0.3, resultsImpactScore: 0.1)
-            ]
-        case "Strength & Conditioning":
-            return [
-                Movement(id: 3, name: "Squats", description: "Bodyweight or weighted squats", videoURL: nil, jointsImpacted: ["ankle", "knee", "hip"], musclesImpacted: ["quadriceps", "glutes", "hamstrings"], superMetricsImpacted: ["strength"], sportsImpacted: ["general"], intensityOptions: ["bodyweight", "weighted"], recoveryImpactScore: 0.2, resilienceImpactScore: 0.9, resultsImpactScore: 0.8),
-                Movement(id: 4, name: "Push-ups", description: "Standard or modified push-ups", videoURL: nil, jointsImpacted: ["shoulder", "elbow"], musclesImpacted: ["chest", "triceps", "shoulders"], superMetricsImpacted: ["strength"], sportsImpacted: ["general"], intensityOptions: ["modified", "standard", "decline"], recoveryImpactScore: 0.1, resilienceImpactScore: 0.8, resultsImpactScore: 0.7),
-                Movement(id: 5, name: "Planks", description: "Core stability exercise", videoURL: nil, jointsImpacted: ["spine"], musclesImpacted: ["core", "shoulders"], superMetricsImpacted: ["stability"], sportsImpacted: ["general"], intensityOptions: ["standard", "side", "reverse"], recoveryImpactScore: 0.3, resilienceImpactScore: 0.7, resultsImpactScore: 0.6)
-            ]
-        case "Aerobic":
-            return [
-                Movement(id: 6, name: "Jogging", description: "Light to moderate pace", videoURL: nil, jointsImpacted: ["ankle", "knee", "hip"], musclesImpacted: ["calves", "quadriceps", "hamstrings"], superMetricsImpacted: ["endurance"], sportsImpacted: ["running"], intensityOptions: ["light", "moderate", "intense"], recoveryImpactScore: 0.4, resilienceImpactScore: 0.3, resultsImpactScore: 0.9),
-                Movement(id: 7, name: "Cycling", description: "Stationary or outdoor cycling", videoURL: nil, jointsImpacted: ["ankle", "knee", "hip"], musclesImpacted: ["quadriceps", "glutes", "calves"], superMetricsImpacted: ["endurance"], sportsImpacted: ["cycling"], intensityOptions: ["light", "moderate", "intense"], recoveryImpactScore: 0.5, resilienceImpactScore: 0.2, resultsImpactScore: 0.8)
-            ]
-        case "Cool Down":
-            return [
-                Movement(id: 8, name: "Static Stretching", description: "Hold stretches for 15-30 seconds", videoURL: nil, jointsImpacted: ["ankle", "knee", "hip", "shoulder"], musclesImpacted: ["calves", "hamstrings", "quadriceps", "chest"], superMetricsImpacted: ["mobility"], sportsImpacted: ["general"], intensityOptions: ["light"], recoveryImpactScore: 0.9, resilienceImpactScore: 0.1, resultsImpactScore: 0.1),
-                Movement(id: 9, name: "Deep Breathing", description: "Controlled breathing exercises", videoURL: nil, jointsImpacted: ["ribcage"], musclesImpacted: ["diaphragm", "intercostals"], superMetricsImpacted: ["recovery"], sportsImpacted: ["general"], intensityOptions: ["light"], recoveryImpactScore: 0.8, resilienceImpactScore: 0.1, resultsImpactScore: 0.1)
-            ]
-        default:
-            return [
-                Movement(id: 10, name: "General Exercise", description: "Basic movement pattern", videoURL: nil, jointsImpacted: ["general"], musclesImpacted: ["general"], superMetricsImpacted: ["general"], sportsImpacted: ["general"], intensityOptions: ["light", "moderate"], recoveryImpactScore: 0.5, resilienceImpactScore: 0.5, resultsImpactScore: 0.5)
-            ]
-        }
-    }
+
     
     // MARK: - Theme Helper Functions
     
@@ -419,105 +441,40 @@ struct TodayWorkoutView: View {
 
 
 
-struct WorkoutSection: View {
-    let title: String
-    let subtitle: String
-    let movements: [Movement]
-    let isLoading: Bool
+struct TodayWorkoutBlockSection: View {
+    let block: ProgramWorkoutBlock
+    let blockItems: [MovementBlockItem]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Section Header
+            // Block Header
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
+                Text(block.movementBlock?.name ?? "Workout Block")
                     .font(.title3)
                     .fontWeight(.bold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)
                 
-                Text(subtitle)
+                Text("\(blockItems.count) movements")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.8))
             }
             
             // Movement Cards
-            if isLoading {
-                // Show loading state
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
-                    ForEach(0..<2) { _ in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "figure.strengthtraining.traditional")
-                                    .font(.title2)
-                                    .foregroundColor(.accentColor)
-                                
-                                Spacer()
-                                
-                                Image(systemName: "circle")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Text("Movement")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .lineLimit(2)
-                            
-                            Text("Loading...")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemBackground))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                    }
+            if blockItems.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "figure.walk")
+                        .font(.title2)
+                        .foregroundColor(.white.opacity(0.6))
+                    Text("No movements in this block")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.6))
                 }
-            } else if movements.isEmpty {
-                // Fallback when no movements are available (shouldn't happen with fallback movements)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
-                    ForEach(0..<2) { _ in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "figure.strengthtraining.traditional")
-                                    .font(.title2)
-                                    .foregroundColor(.accentColor)
-                                
-                                Spacer()
-                                
-                                Image(systemName: "circle")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Text("No movements available")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .lineLimit(2)
-                            
-                            Text("Check back later")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemBackground))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                    }
-                }
+                .frame(maxWidth: .infinity)
+                .padding()
             } else {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
-                    ForEach(movements, id: \.id) { movement in
-                        MovementCard(movement: movement)
+                    ForEach(blockItems) { item in
+                        TodayMovementCard(movementItem: item)
                     }
                 }
             }
@@ -525,6 +482,100 @@ struct WorkoutSection: View {
         .padding()
         .background(Color.cardBackground)
         .cornerRadius(12)
+    }
+}
+
+struct TodayMovementCard: View {
+    let movementItem: MovementBlockItem
+    
+    // Generate different icons for variety
+    private func getMovementIcon() -> String {
+        let icons = [
+            "figure.walk",
+            "figure.run",
+            "figure.strengthtraining.traditional",
+            "figure.core.training",
+            "figure.flexibility",
+            "figure.mixed.cardio",
+            "figure.outdoor.cycle",
+            "figure.yoga"
+        ]
+        
+        // Use movement ID to consistently assign icons
+        let iconIndex = abs(movementItem.id.hashValue) % icons.count
+        return icons[iconIndex]
+    }
+    
+    private var movementDescription: String {
+        if let description = movementItem.movement?.description, !description.isEmpty {
+            return description
+        }
+        return "Training movement"
+    }
+    
+    var body: some View {
+        NavigationLink(destination: Group {
+            // For now, show a placeholder since we need to load full movement details
+            VStack {
+                Text("Movement Details")
+                    .font(.title)
+                    .padding()
+                Text(movementItem.movement?.name ?? "Unknown Movement")
+                    .font(.headline)
+                    .padding()
+                Text("Full movement details coming soon")
+                    .foregroundColor(.secondary)
+            }
+        }) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    // Different icons for variety
+                    Image(systemName: getMovementIcon())
+                        .font(.title2)
+                        .foregroundColor(.electricGreen)
+                    
+                    Spacer()
+                    
+                    // Show completion status with better contrast
+                    Image(systemName: "circle")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                
+                Text(movementItem.movement?.name ?? "Unknown Movement")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                
+                Text(movementDescription)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.8))
+                    .lineLimit(1)
+                
+                // Add spacer to ensure consistent height
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120, alignment: .leading)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.2, green: 0.2, blue: 0.3),
+                        Color(red: 0.15, green: 0.15, blue: 0.25)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -627,8 +678,14 @@ struct MovementCard: View {
 
 
 #Preview {
-    TodayWorkoutView(showingProfile: .constant(false))
-        .environmentObject(AppState())
+    TodayWorkoutView(
+        showingProfile: .constant(false),
+        supabase: SupabaseClient(
+            supabaseURL: URL(string: "https://example.com")!,
+            supabaseKey: "key"
+        )
+    )
+    .environmentObject(AppState())
 }
 
 

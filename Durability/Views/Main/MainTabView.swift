@@ -31,7 +31,7 @@ struct MainTabView: View {
                 }
                 .tag(0)
                 
-                TodayWorkoutView(showingProfile: $showingProfile)
+                TodayWorkoutView(showingProfile: $showingProfile, supabase: SupabaseManager.shared.client)
                     .tabItem {
                         Image(systemName: "figure.walk")
                         Text("Today")
@@ -44,13 +44,6 @@ struct MainTabView: View {
                         Text("Progress")
                     }
                     .tag(2)
-                
-                TrainingPlanTestView(supabase: SupabaseManager.shared.client)
-                    .tabItem {
-                        Image(systemName: "wrench.and.screwdriver")
-                        Text("Test")
-                    }
-                    .tag(3)
             }
         }
         .sheet(isPresented: $showingProfile) {

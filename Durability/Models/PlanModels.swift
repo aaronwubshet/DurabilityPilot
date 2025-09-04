@@ -2,33 +2,43 @@ import Foundation
 
 // MARK: - Movement Library
 struct Movement: Codable, Identifiable {
-    let id: Int
-    let name: String
-    let description: String
-    let videoURL: String?
-    let jointsImpacted: [String]
-    let musclesImpacted: [String]
-    let superMetricsImpacted: [String]
-    let sportsImpacted: [String]
-    let intensityOptions: [String]
-    let recoveryImpactScore: Double
-    let resilienceImpactScore: Double
-    let resultsImpactScore: Double
+	let id: Int
+	let name: String
+	let description: String
+	let videoURL: String?
+	let jointsImpacted: [String]
+	let musclesImpacted: [String]
+	let superMetricsImpacted: [String]
+	let sportsImpacted: [String]
+	let intensityOptions: [String]
+	let recoveryImpactScore: Double
+	let resilienceImpactScore: Double
+	let resultsImpactScore: Double
+	let requiredEquipment: [String]
+	let goalImpacts: [String]
+	let bodyPartImpacts: [String]
+	let injuryIndications: [String]
+	let injuryContraindications: [String]
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case description
-        case videoURL = "video_url"
-        case jointsImpacted = "joints_impacted"
-        case musclesImpacted = "muscles_impacted"
-        case superMetricsImpacted = "super_metrics_impacted"
-        case sportsImpacted = "sports_impacted"
-        case intensityOptions = "intensity_options"
-        case recoveryImpactScore = "recovery_impact_score"
-        case resilienceImpactScore = "resilience_impact_score"
-        case resultsImpactScore = "results_impact_score"
-    }
+    	enum CodingKeys: String, CodingKey {
+		case id
+		case name
+		case description
+		case videoURL = "video_url"
+		case jointsImpacted = "joints_impacted"
+		case musclesImpacted = "muscles_impacted"
+		case superMetricsImpacted = "super_metrics_impacted"
+		case sportsImpacted = "sports_impacted"
+		case intensityOptions = "intensity_options"
+		case recoveryImpactScore = "recovery_impact_score"
+		case resilienceImpactScore = "resilience_impact_score"
+		case resultsImpactScore = "results_impact_score"
+		case requiredEquipment = "required_equipment"
+		case goalImpacts = "goal_impacts"
+		case bodyPartImpacts = "body_part_impacts"
+		case injuryIndications = "injury_indications"
+		case injuryContraindications = "injury_contraindications"
+	}
 }
 
 // MARK: - Plan System

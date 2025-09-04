@@ -330,7 +330,7 @@ class TrainingPlanService: ObservableObject {
             
             let response: [UserWorkout] = try await supabase
                 .from("user_workouts")
-                .select()
+                .select("*, user_programs(*)")
                 .eq("user_program_id", value: up.id)
                 .eq("scheduled_date", value: todayString)
                 .limit(1)
