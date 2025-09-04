@@ -267,7 +267,7 @@ struct WorkoutPreviewCard: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color(.systemGray6))
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
